@@ -64,7 +64,9 @@ IS_CLICK_OP=0
 printf '%s' "$STDIN_JSON" | grep -qE 'browser_click|"action"[[:space:]]*:[[:space:]]*"(left_click|right_click|middle_click|double_click|triple_click|click)"' && IS_CLICK_OP=1
 IS_CODE_OP=0
 printf '%s' "$STDIN_JSON" | grep -qE 'javascript_tool|browser_evaluate|browser_run_code|shortcuts_execute|browser_press_key|"action"[[:space:]]*:[[:space:]]*"(key|hold_key)"' && IS_CODE_OP=1
-if [ "$IS_CLICK_OP" = "1" ] && printf '%s' "$STDIN_TEXT" | grep -qiE '"(element|name|label|text|description|selector|target)"[[:space:]]*:[[:space:]]*"[^"]*(公開|予約投稿|Publish|Schedule|更新|Update)'; then
+# 判定するキーは要素の説明系だけ（type の "text" は見ない — browser_batch で「公開」を含む本文入力とクリックが同居しても誤検知しない）。
+# 「更新 / Update」は公開済み記事の上書きボタンだけを狙うので完全一致（"更新" / "Update" / "更新 button"）に限る（「更新日時で並べ替え」は通す）。
+if [ "$IS_CLICK_OP" = "1" ] && printf '%s' "$STDIN_TEXT" | grep -qiE '"(element|name|label|description|selector|target)"[[:space:]]*:[[:space:]]*"([^"]*(公開|予約投稿|Publish|Schedule)[^"]*|[[:space:]]*(更新|Update)([[:space:]]*(button|ボタン))?[[:space:]]*)"'; then
   deny "【Publish Guard】WordPress の「公開」「予約投稿」「更新」に相当するクリックは AI には許可されていません。このプラグインが押してよいのは「下書き保存」だけです。公開はユーザー本人が WP 管理画面で行ってください。"
 fi
 if [ "$IS_CODE_OP" = "1" ] && printf '%s' "$STDIN_TEXT" | grep -qiE "post_status[^a-z_]{0,3}(=|:|=>)[[:space:]\"']*(publish|future|private)|wp_publish_post|status[[:space:]]*:[[:space:]]*[\"']?(publish|future|private)|editPost|savePost|ctrl\+alt\+p|alt\+shift\+p"; then

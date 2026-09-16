@@ -22,9 +22,11 @@ fi
 
 # (a1) REST の直叩き（curl / python requests / wp-json・rest_route）は書き方を問わず拒否。正規の経路は wp-draft.py だけ
 #      （JSON 本文の status はエスケープ・ファイル参照・別言語で書けるので文字判定では網羅できない）
-if printf '%s' "$CMD" | grep -qiE 'wp-json/wp/v2/(posts|pages)|rest_route=/?wp/v2/(posts|pages)' && ! printf '%s' "$CMD" | grep -qiE 'wp-draft\.py'; then
-  deny "【Publish Guard】WordPress REST（wp-json/wp/v2/posts）の直接呼び出しは AI には許可されていません。投稿は scripts/wp-draft.py（下書きのみ）を使ってください。"
-fi
+while IFS= read -r SEG; do
+  if printf '%s' "$SEG" | grep -qiE 'wp-json/wp/v2/(posts|pages)|rest_route=/?wp/v2/(posts|pages)|Invoke-(RestMethod|WebRequest)[^\n]*wp-json' && ! printf '%s' "$SEG" | grep -qiE 'wp-draft\.py'; then
+    deny "【Publish Guard】WordPress REST（wp-json/wp/v2/posts）の直接呼び出しは AI には許可されていません。投稿は scripts/wp-draft.py（下書きのみ）を使ってください。"
+  fi
+done < <(printf '%s\n' "$CMD" | sed -E 's/(&&|\|\||;|\||\\n)/\n/g')
 
 # WP 投稿を伴うコマンドか（wp-draft.py / wp-json/wp/v2/posts への POST・PUT / wp post create）
 if printf '%s' "$CMD" | grep -qiE 'wp-draft\.py|wp-json/wp/v2/(posts|pages)|wp[ ]+post[ ]+(create|update)'; then

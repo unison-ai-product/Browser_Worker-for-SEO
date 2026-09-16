@@ -9,6 +9,13 @@
 - `scripts/verify.sh` — CI / Release / `/SEO検証` が共通で呼ぶ検証コマンド（manifests・構造・スクリプト・hooks・DB・WP 拒否・リリース整合）
 - CHANGELOG.md
 
+### Fixed（外部監査 3 回目 2026-09-16）
+- Secret Guard: コマンドを `;` `&&` `||` `|` で区切って区切りごとに判定（`ls .env; cat .env` を拒否）。ワイルドカード（`.e*` / `*.env` / `wp*`）で認証メモを指す読み出しは一律拒否。matcher に Grep / PowerShell を追加
+- Publish Guard: REST 直叩きの判定も区切りごと（`wp-draft.py --check; curl …/wp-json/…` を拒否）。PowerShell の Invoke-RestMethod / Invoke-WebRequest も対象。matcher に PowerShell を追加
+- Publish Guard（ブラウザ）: クリック判定から type の `text` を外し（browser_batch の誤検知）、「更新 / Update」は完全一致だけ（「更新日時で並べ替え」は通す）
+- Injection Warn: 英語パターンに語境界、「AIへ」は指示形（「AIへの指示」「AIへ:」）に限定、HTML コメントは AI 語 + 指示語の組み合わせだけ。LLMO 記事の通常文（「AIへの最適化」「for LLMO」「<!-- main container -->」）で警告しない
+- test-hooks.sh: 57 項目
+
 ### Fixed（外部監査 2 回目 2026-09-16）
 - Publish Guard（Bash）: REST の直叩き（curl / requests / `wp-json/wp/v2/posts` / `rest_route=`）は wp-draft.py 以外一律拒否（JSON 本文の status は文字判定で網羅できないため）。`wp post list/get --post_status=publish`（読むだけ）は通す
 - Publish Guard（ブラウザ）: 文字判定はクリック系（Playwright の element 説明）・JS・ショートカット・key にだけ当て、type / form_input の本文（「公開ボタンの押し方」等）では止めない。JS の `editPost({status:'publish'})` `Ctrl+Alt+P` を拒否。stage=write 中は JS・ショートカット・key を全面停止。**Claude in Chrome の ref / 座標クリックは判定できない**ことをコメント・手順書・テストに明記

@@ -8,7 +8,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/_common.sh"
 
-PATTERNS='ignore (all )?(previous|prior|above) (instructions|prompts)|disregard (your|all|previous)|you are now|new instructions?:|system prompt|do not tell the user|(dear|to|for|attention)[ ,:]*(ai|assistant|claude|llm|language model|chatgpt)|<!--[^>]*(ai|assistant|claude|instruction)|(publish|post|submit|approve) (this|the) (article|post|page)|これまでの指示(を|は)(無視|忘れ)|以前の指示を無視|あなたは今から|システムプロンプト|ユーザーに(は)?(伝え|言わ|報告し)ないで|新しい指示[:：]|指示を上書き|(AI|アシスタント|エージェント|Claude)(へ|さん|の方へ|への指示)|この(記事|投稿|ページ)を(公開|承認|投稿)して|(以下|次|下記)の(URL|リンク)に(アクセス|移動|遷移)して|(パスワード|認証情報|APIキー|トークン)を(入力|送信|教えて)'
+PATTERNS='ignore (all )?(previous|prior|above) (instructions|prompts)|disregard (your|all|previous)|you are now|new instructions?:|system prompt|do not tell the user|\b(dear|attention|note to|instructions? (for|to))[ ,:]+(the )?(ai|assistant|claude|llm|language model|chatgpt)\b|<!--[^>]*\b(ai|assistant|claude|llm)\b[^>]*(instruction|ignore|publish|must|should|してください|指示)|\b(publish|post|submit|approve) (this|the) (article|post|page)\b|これまでの指示(を|は)(無視|忘れ)|以前の指示を無視|あなたは今から|システムプロンプト|ユーザーに(は)?(伝え|言わ|報告し)ないで|新しい指示[:：]|指示を上書き|(AI|アシスタント|エージェント|Claude)(へ|さん|の方へ)(の指示|[:：]|、(必ず|以下|次))|この(記事|投稿|ページ)を(公開|承認|投稿)してください|(以下|次|下記)の(URL|リンク)に(アクセス|移動|遷移)してください|(パスワード|認証情報|APIキー|トークン)を(入力|送信|教えて)(してください|ください)'
 
 # 照合は STDIN_TEXT（\uXXXX デコード済み）に対して行う — 生JSONだと日本語パターンが不発になる
 # Read は作業ファイル（memory/work/ knowledge/ outputs/）だけ対象 — サブエージェントが Web から写した文字列がここに残る

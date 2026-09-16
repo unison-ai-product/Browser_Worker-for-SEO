@@ -22,7 +22,7 @@
         ]
       },
       {
-        "matcher": "Bash|mcp__workspace__bash",
+        "matcher": "Bash|PowerShell|mcp__workspace__bash",
         "hooks": [
           {
             "type": "command",
@@ -57,7 +57,7 @@
         ]
       },
       {
-        "matcher": "Read|Glob",
+        "matcher": "Read|Glob|Grep",
         "hooks": [
           {
             "type": "command",

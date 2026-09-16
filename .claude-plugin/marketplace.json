@@ -1,0 +1,12 @@
+{
+  "name": "unison-seo-content-worker",
+  "owner": { "name": "UNISON TECHNOLOGY" },
+  "plugins": [
+    {
+      "name": "seo-content-worker",
+      "source": "./",
+      "version": "0.1.0",
+      "description": "SEO記事のコンテンツ制作 — SERPs解析→記事分析→構成案→記事作成→WP下書き"
+    }
+  ]
+}

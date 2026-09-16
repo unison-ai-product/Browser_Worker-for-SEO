@@ -1,0 +1,20 @@
+# knowledge/config/config.yaml の雛形（/SEO設定 が作る。値は空のまま推測で埋めない）
+sheet_id: ""                 # 成果物スプレッドシートの ID（シート名は templates/sheet-layout.md）
+keyword_map_sheet: ""        # キーワードマップのシート（同一ファイルなら "キーワードマップ"、別ファイルなら ID）
+own_domain: ""               # site:検索と内部リンク判定に使う自社ドメイン（site-profile.yaml と同じ値）
+
+wp:
+  site_url: ""               # https://example.jp
+  method: ""                 # rest / browser / both（both = REST で送りブラウザで確認。REST でも確認は必須）
+  default_category: ""
+  author: ""
+  # 認証は .env の WP_USER / WP_APP_PASSWORD（ここに書かない）
+
+imagegen:                    # 図解の経路 B（ユーザー選択。未設定なら経路 B を使わない）
+  service: ""                # gemini / canva / chatgpt
+  max_per_article: null
+
+llmo:
+  surfaces: [aio, ai_mode, chatgpt, gemini]   # v0.1 の観測面
+
+analysis: analysis.yaml      # しきい値（templates/analysis.example.yaml を写す）

@@ -1,0 +1,60 @@
+# gate_rules.yaml 既定（/SEO設定 rules が knowledge/rules/gate_rules.yaml にコピーし、サイトの差分を上書きする）
+# 出どころ: skills/seo-writing/references/writing-rules.md の「機械判定: 可」項目 + checklist.md。
+# 値の意味は skills/gate-script/SKILL.md §2。
+
+required_keywords:
+  must_in: [h1, h2, h3, lead]      # 必須キーワードが置かれてよい場所
+  recommended_warn: true           # 推奨キーワードの欠落は警告
+
+title:
+  warn_over: 32                    # 32 字超で警告（ユーザー決定 2026-09-16）
+  fail_over: 40                    # 40 字超で FAIL
+  must_include_keyword: true
+
+meta_description:
+  warn_over: 140
+
+fullwidth_alnum: fail              # 全角英数字（２０１３、Ａ など）を検出したら FAIL
+
+replacements:                      # 表記ゆれ・略語 → 統一先（既定は writing-rules の例のみ。サイトの統一語は差分で追加）
+  "ウェブ": "Web"
+  "WEB": "Web"
+  "web": "Web"
+  "さまざま": "様々"
+  "ツイッター": "Twitter"
+  "スマホ": "スマートフォン"
+
+redundant:                         # 二重表現・冗長表現 → 置換候補
+  "必ず必要": "必要"
+  "まず最初に": "最初に"
+  "約[0-9０-９]+[%％]程度": "約N％ または N％程度"
+  "することができます": "が可能です"
+  "ということがいえます": "といえます"
+
+sentence_end_repeat:
+  max_consecutive: 2               # 同一語尾は 2 回まで（3 連続で FAIL）
+
+spoken:                            # 話し言葉（警告）
+  patterns: ["れる(?<!られる)", "てる[。、]", "ってる"]
+  level: warn
+
+sentence_length:
+  warn_over_chars: 80
+  warn_over_commas: 3
+
+quote_source:
+  blockquote_requires_source: true # blockquote 直後に出典（URL か名称）が無ければ FAIL
+
+forbidden: []                      # 禁止表現（既定は空。media-rules の差分で追加。正規表現可）
+
+structure:
+  h2_min: null                     # 上位記事中央値から手順書が渡す（null = 判定しない）
+  h2_max: null
+  h3_without_h2: fail
+
+links:
+  internal_links_min: 1
+  alt_required: true
+
+placeholders:
+  fail_if_present: ["[要出典", "{{figure", "[[link:", "[要人間判断]"]

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+# ワークスペース側の状態（プラグイン本体には含めない）
+memory/
+knowledge/
+outputs/
+.env
+.claude/
+seo-content-worker.plugin

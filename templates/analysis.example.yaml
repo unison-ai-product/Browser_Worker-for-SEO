@@ -1,0 +1,21 @@
+# knowledge/config/analysis.yaml の雛形（gsc-analysis / ga4-analysis のしきい値）。
+# null = 未決定（判定しない）。AI-office-de-seo の L3 でも TODO のまま。/SEO設定 でユーザーが決める。
+gsc:
+  judge_window_months: 3           # リライト候補判定の期間（KGA L144）
+  eval_windows_months: [1, 3, 6]   # 実施後の評価（主 / 副 / 長期）
+  expected_ctr:
+    baseline: self_site            # 自サイトの順位×デバイス×意図。新規は prior から
+    prior_table: null              # 順位別の一般 CTR（新規サイト用）。null なら残差判定を保留
+    residual_negative_threshold: null
+    sustained_periods: null        # 何期間連続で負なら候補にするか
+  freshness:
+    impressions_drop_ratio: null   # 3 か月前比の減少率（例 0.3）
+    stale_days: null               # 更新日からの日数
+  cannibal:
+    min_swaps: null                # 順位入替の回数
+  co_landing:
+    token_overlap_min: null
+  position_bands: [[1,3],[4,10],[11,20],[21,50]]
+ga4:
+  key_events: []                   # CV とみなすキーイベント名（site-profile.yaml cta.key_events と同じ）
+  ai_referrers: [chatgpt.com, gemini.google.com, copilot.microsoft.com, perplexity.ai]

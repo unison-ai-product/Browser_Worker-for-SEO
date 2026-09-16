@@ -21,7 +21,7 @@ argument-hint: <検索キーワード>
 8. **キーワードゲート**: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py --outline memory/work/<kw>/outline.md --required memory/work/<kw>/required_keywords.txt --rules knowledge/rules/gate_rules.yaml` を実行し、必須キーワードの網羅・タイトル字数・見出し数・禁止語を機械判定。FAIL 項目は直してから再実行。keyword-gate（Haiku）に「機械判定の結果と構成案を渡して抜け漏れの目視検算」を委譲してよい。
 9. **敵対検証**: adversarial-reviewer（Opus）に「上位5記事の見出し構成（② の analysis_*.md）と本構成案」を渡し、(a) 上位記事に負ける節 (b) AIO に引用されない理由 (c) 検索意図とズレる節 (d) 自社の主張が弱い節、を指摘させる。指摘を反映して第2案にし、再度手順8 のゲートを通す（最大2周）。
 10. **記録**: `memory/work/<kw>/outline.md`（最終案）、スプレッドシート `構成案` シートに 1 行（タイトル / 見出し階層 / AIO 引用方針 / 内部リンク / コンテンツ方針 / ゲート結果 / 敵対検証の要点）、seo.db `outlines` に追記。
-11. 完了報告と**ユーザー承認**（通しなら seo-article 手順2）。承認時の修正はすべて seo.db `feedback` に記録。
+11. 完了報告。通し（/SEO記事）ならそのまま ④ へ進む。単体 /構成案 ならここで終わり、ユーザーの修正指示があれば反映して seo.db `feedback` に記録する。
 
 ## 成果物の定義
 

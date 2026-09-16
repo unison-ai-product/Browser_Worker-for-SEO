@@ -36,7 +36,7 @@ SEO Worker のタスク「$ARGUMENTS」を開始する。手順の正本は `doc
 
 4. Step F〜G は各ステージの手順書（seo-serps / seo-analysis / seo-outline / seo-write）に従う。
 
-5. Step H: WP 下書き投稿の直前は pre-publish-verifier（Haiku）の VERDICT を取り、ユーザー承認（AskUserQuestion）を得てから:
+5. Step H: WP 下書き投稿の直前は pre-publish-verifier（Haiku）の VERDICT が GO であることを確認してから（人の承認は取らない。承認の深さはコマンドが決める — seo-article §2）:
    ```bash
    touch memory/.workflow/psv_done
    ```

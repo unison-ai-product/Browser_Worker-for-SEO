@@ -2,7 +2,6 @@
 name: diagram-maker
 description: >
   図解作成スキル — ④記事作成で見出しテーマに合わせて並列で図解を作る方法。出力は 2 経路: (A) HTML/CSS で図を組んでブラウザのスクリーンショットで PNG 化、(B) 画像生成 AI（Gemini / Canva 等）をログイン済みブラウザで操作して生成。図の要否は仕様メモどおり「見出しテーマに合わせて」自動で候補を出す。
-  出典: 仕様メモ ④-2、ユーザー指示（2026-09-16: 出力形式は画像生成 AI + HTML/CSS スクショ）、browser-worker docs/parts/imagegen.md（ブラウザ生成の節度と取り込み手順）。
   Use when 「図解作って」「この節を図にして」、procedures/seo-write.md 手順3。
   Not for アイキャッチ・バナー等の装飾画像（別部品）、データ可視化ダッシュボード。
 metadata:

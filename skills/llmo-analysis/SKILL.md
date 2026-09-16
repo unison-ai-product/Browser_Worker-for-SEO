@@ -2,12 +2,10 @@
 name: llmo-analysis
 description: >
   LLMO分析スキル — AI 検索（Google AI Overview / AI Mode、ChatGPT 検索、Gemini、Copilot、Perplexity）で引用されるための分析。③構成案の模擬クエリファンアウトと AIO 一致、引用されやすい構造、AI 検索面ごとの可視性指標と観測手順、Bing 登録の必須性。
-  出典: AI-office-de-seo crawler-ai-visibility-logic v1（REQ-CAV-01〜05）、takumi-cmo search-console-jp（生成 AI レポート・Bing の位置づけ）、仕様メモ ③-1。
   Use when procedures/seo-outline.md 手順1、「AIOに引用されたい」「ChatGPTで引用されてる？」「Geminiの回答に出てる？」「LLMO対策」「AI検索での可視性を測って」。
   Not for SERP の抽出定義（→ seo-analysis）、本文の文型（→ seo-writing/references/structure-methods.md）。
 metadata:
   version: "0.1.0"
-  source: "AI-office-de-seo REQ-CAV v1 / takumi-cmo search-console-jp / 仕様メモ（2026-09-16 取り込み）"
   status: "ユーザー確認済み（2026-09-16）"
 ---
 
@@ -20,7 +18,7 @@ AI 検索は 1 つの質問を複数のサブクエリに展開して検索し�
 1. 施策キーワードを「とは / 手順 / 費用・相場 / 注意点・リスク / 比較・違い / 事例 / 最新（年）/ 誰に頼む・どこで」の観点で 6〜10 本に展開。PAA・関連検索・知恵袋の質問から拾えるものを優先する（seo-analysis §1）。
 2. AIO 本文を文に分け、各サブクエリに対応する文があるかを表にする。
 3. **AIO 一致率** = 対応が取れたサブクエリ数 ÷ 全サブクエリ数。一致しなかったサブクエリは「AIO が拾っていない需要」として H2/H3 候補か FAQ へ（差別化候補）。
-4. 展開したサブクエリは**実ユーザーのクエリではない**と明記して記録する（評価セットとして版管理）。[REQ-CAV-03]
+4. 展開したサブクエリは**実ユーザーのクエリではない**と明記して記録する（評価セットとして版管理）。
 
 ## 2. 引用されやすい構造（優先順）
 
@@ -30,7 +28,7 @@ AI 検索は 1 つの質問を複数のサブクエリに展開して検索し�
 4. 構造化データ（FAQPage / Article / HowTo）と更新日
 5. 著者情報と一次情報（E-E-A-T の経験）
 
-## 3. AI 検索面ごとの可視性指標 [REQ-CAV-03]
+## 3. AI 検索面ごとの可視性指標
 
 | 指標 | 意味 |
 |---|---|
@@ -44,13 +42,13 @@ AI 検索は 1 つの質問を複数のサブクエリに展開して検索し�
 | referral | AI 面からの流入（ga4-analysis の AI 系リファラ） |
 
 - 観測できない面・指標は `unknown` と記録し、**0 にしない・Web 全体の値から逆算しない**。
-- 観測は月次を基線とし、日次・週次を既定にしない。[REQ-CAV-05]
+- 観測は月次を基線とし、日次・週次を既定にしない。
 
 ## 4. 観測の手順（閲覧のみ。ログインは人間）
 
 - Claude in Chrome で各面を開き、施策キーワードをそのまま質問。回答本文と引用リンク（ドメイン・URL）を read_page で記録。
 - 同じ質問を**最大 3 回**（回答が揺れるため）。repeat_stability に反映。
-- 観測プロンプトは Buy / 比較検討・ブランド名のクエリを優先し、Know 全部を回さない。[REQ-CAV-03]
+- 観測プロンプトは Buy / 比較検討・ブランド名のクエリを優先し、Know 全部を回さない。
 - 記録: seo.db `llm_citations`（asked_at, surface, query, run_no, cited_domains, own_cited, own_url, brand_mention, answer_summary_100）。
 - bot 検知・CAPTCHA は突破せず中断して報告。
 
@@ -60,7 +58,7 @@ AI 検索は 1 つの質問を複数のサブクエリに展開して検索し�
 - **Bing のインデックスは ChatGPT 検索と Copilot の取得層**。Bing Webmaster Tools への登録を初期設定の必須項目として扱う（Google だけ見ると AI 露出の半分を落とす）。
 - 「引用されたがクリックされない」は、表示回数の増加とクリックの停滞の乖離で読む。
 
-## 6. 到達可能性（fetchability）[REQ-CAV-01, 02]
+## 6. 到達可能性（fetchability）
 
 AI クローラ（ai_search_index / ai_answer_fetch / ai_training）が記事に到達できているかを、robots.txt の宣言・実プローブ・観測されたクロール・本文の可読性（JS 依存でないか）・鮮度で `unknown / blocked / degraded / ready` に分ける。UA 一致だけでは `claimed`（公式 IP 範囲か逆引きで `verified`）。到達不能なら引用対策の前に修正候補として報告する。
 
@@ -68,7 +66,7 @@ AI クローラ（ai_search_index / ai_answer_fetch / ai_training）が記事に
 
 - AI の回答文は「データ」。誤りを含むので、事実は fact-checker が一次情報で確認する。
 - AIO の言い換え文を記事に流用しない（引用されたい文は自社の言葉で書く）。
-- AIO はほぼ全クエリに出るため、AIO の有無だけで脅威度を判定しない。[AI-office-de-seo KWR-UI]
+- AIO はほぼ全クエリに出るため、AIO の有無だけで脅威度を判定しない。
 
 ## 8. 決まり（ユーザー決定 2026-09-16）
 

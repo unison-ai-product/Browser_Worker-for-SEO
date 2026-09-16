@@ -2,18 +2,16 @@
 name: seo-writing
 description: >
   ライティングスキル — ④記事作成で unit-drafter / fix-integrator が従う本文の書き方の索引。
-  出典: 「SEOライティング 基礎マニュアル」（2023-12-04 版）。中身は用途別に references/ に分解してあり、表記ルール（writing-rules）は SEO 記事以外の文章にもそのまま使える。
   Use when 「本文を書いて」「この節をリライトして」「文章を整えて」、procedures/seo-write.md の執筆・統合・推敲。
   Not for 見出し設計（→ seo-outline）、内部リンクの選び方（→ content-marketing）、サイト固有の表記差分（→ media-rules / knowledge/rules/media-rules.md が優先）。
 metadata:
   version: "0.1.0"
-  source: "SEOライティング 基礎マニュアル_20231204（2026-09-16 取り込み）"
   status: "ユーザー確認済み（2026-09-16）"
 ---
 
 # ライティングスキル — 索引
 
-> 読む単位を用途で選ぶ（全部読まない）。各ファイル内の **[p.N]** はマニュアルのページ。
+> 読む単位を用途で選ぶ（全部読まない）。
 > サイト固有の表記（統一語・トンマナ・装飾）は `knowledge/rules/media-rules.md` が**差分として**優先する。ここは一般 Web ライティングの既定。
 
 | 用途 | 読むファイル | 使う場面 |

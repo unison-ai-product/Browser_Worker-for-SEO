@@ -23,7 +23,7 @@ argument-hint: <検索キーワード>
      ```bash
      echo "PASS $(date +%FT%T) rounds=<n>" > memory/.workflow/gate_pass
      ```
-7. **送信前監査と承認**: pre-publish-verifier（Haiku）に article.md・outline.md・媒体ルール・WP 投稿計画（タイトル / スラッグ / カテゴリ / 下書き）を渡して VERDICT（GO / NO-GO / UNVERIFIABLE）。GO のうえで AskUserQuestion で「下書き投稿してよいか」を取り、`touch memory/.workflow/psv_done`。NO-GO は理由を報告して止まる。
+7. **送信前監査**: pre-publish-verifier（Haiku）に article.md・outline.md・媒体ルール・WP 投稿計画（タイトル / スラッグ / カテゴリ / 下書き）を渡して VERDICT（GO / NO-GO / UNVERIFIABLE）。GO なら `touch memory/.workflow/psv_done` して次へ（**通し /SEO記事 では人の承認を取らない**。下書きなので取り返しが付く）。単体 /記事作成 で呼ばれたときも同じだが、投稿前に VERDICT を 1 画面で報告する。NO-GO / UNVERIFIABLE は投稿せず理由を報告して止まる。
 8. **WP 下書き投稿**（どちらか。config.yaml の `wp.method`）:
    - **REST**: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/wp-draft.py --site <site_url> --title "<t>" --content memory/work/<kw>/article.html --status draft [--slug --category --excerpt]`（.env の WP_USER / WP_APP_PASSWORD を読む。値を表示しない）。図解は `--media figures/*.svg` で先にメディアへアップし、本文の参照を差し替える。
    - **ブラウザ**: Claude in Chrome で WP 管理画面 → 投稿 → 新規追加。`knowledge/sites/wordpress.md` の装飾ルール（ブロック / クラシック、使うブロック種）に従って貼り付け、**「下書き保存」のみ**押す。「公開」「予約」は押さない。

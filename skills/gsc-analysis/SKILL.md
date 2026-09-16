@@ -2,18 +2,16 @@
 name: gsc-analysis
 description: >
   GSC分析スキル — Google Search Console の検索パフォーマンスから記事ごとの表示回数・クリック・CTR・掲載順位・クエリを読み、リライト候補（クエリ最適化 / フレッシュネス / 内部リンク / カニバリ）を機械的に出す観点と安全境界。v0.2 の /SEO分析・/リライト の前段。
-  出典: C:\dev\AI-office-de-seo の要件定義（keyword-gsc-article-map v3.7、rewrite-runtime v3.7、verification-log v3.7）と takumi-cmo search-console-jp の安全境界。
   Use when 「GSCを見て」「どの記事をリライトすべき？」「順位が落ちた記事は？」「取れているクエリは？」「カニバってる？」。
   Not for GA4 のコンバージョン（→ ga4-analysis）、SERP の生データ（→ seo-analysis）、AI 検索の引用（→ llmo-analysis）。
 metadata:
   version: "0.1.0"
-  source: "AI-office-de-seo L1 requirements v3.7 / takumi-cmo search-console-jp（2026-09-16 取り込み）"
   status: "ユーザー確認済み（2026-09-16）"
 ---
 
 # GSC分析スキル
 
-> 判定はすべて**決定的（LLM を使わない）**に行い、しきい値は knowledge/config/analysis.yaml に置く（既定は templates/analysis.example.yaml）。[出典: KGA 要件 L151]
+> 判定はすべて**決定的（LLM を使わない）**に行い、しきい値は knowledge/config/analysis.yaml に置く（既定は templates/analysis.example.yaml）。
 
 ## 1. 安全境界（search-console-jp より）
 
@@ -27,11 +25,11 @@ metadata:
 
 | 項目 | 内容 | 制約 |
 |---|---|---|
-| 検索パフォーマンス（ページ × クエリ × 日） | 表示回数 / クリック / CTR / 掲載順位 / デバイス / 国 | API は 50,000 行/日/プロパティ/検索タイプ、1 リクエスト 25,000 行 + startRow、UI は 1,000 行 [verification-log L17] |
-| 期間 | リライト候補判定は**直近 3 か月**。実施後の評価は 1 か月（主）/ 3 か月（副）/ 6 か月（長期） [KGA L144] | 日次で正規化して保存（追記型） |
-| 生成 AI パフォーマンスレポート（Beta） | AI Overviews / AI Mode の表示回数（ページ・国・デバイス・日）。**クリック・CTR・順位・クエリは出ない** | 通常レポートにも含まれているので**足し算しない**（二重計上）。出なければ `未提供` と記録（FAIL にしない） [KGA L351-354] |
+| 検索パフォーマンス（ページ × クエリ × 日） | 表示回数 / クリック / CTR / 掲載順位 / デバイス / 国 | API は 50,000 行/日/プロパティ/検索タイプ、1 リクエスト 25,000 行 + startRow、UI は 1,000 行  |
+| 期間 | リライト候補判定は**直近 3 か月**。実施後の評価は 1 か月（主）/ 3 か月（副）/ 6 か月（長期）  | 日次で正規化して保存（追記型） |
+| 生成 AI パフォーマンスレポート（Beta） | AI Overviews / AI Mode の表示回数（ページ・国・デバイス・日）。**クリック・CTR・順位・クエリは出ない** | 通常レポートにも含まれているので**足し算しない**（二重計上）。出なければ `未提供` と記録（FAIL にしない）  |
 
-## 3. クエリの正規化（Match Cascade）[KGA L303-320]
+## 3. クエリの正規化（Match Cascade）
 
 同じ意図のクエリを 1 グループにまとめてから判定する。段階と信頼度を必ず記録する:
 
@@ -44,7 +42,7 @@ metadata:
 | serp_verified | SERP 上位 URL の重なりで確認 |
 | unmatched | どれにも当たらない |
 
-## 4. 期待 CTR と残差（固定の AIO 減衰率を仮定しない）[KGA L335-336]
+## 4. 期待 CTR と残差（固定の AIO 減衰率を仮定しない）
 
 - **自サイトの「順位 × デバイス × 意図」別の期待 CTR** を基線にし、実 CTR との残差 `realizable_ctr` を出す。新規サイトは一般の順位別 CTR を事前値にし、自データが増えたら寄せる。
 - **AIO による CTR 減少率を固定値で仮定することは禁止**。AIO の影響は `aio_pressure`（ゼロクリック側の損失）と引用機会に分けて別に持つ。

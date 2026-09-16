@@ -2,7 +2,6 @@
 name: user-original
 description: >
   ユーザーオリジナルスキル — ユーザーがくれる知識（自社の主張・立場、一次情報＝実測値・事例・顧客の声、その他の知識）を、主にファイルアップロードで取り込み、1 件ずつメタディスクリプションを付けて SQLite（seo.db `knowledge_items` + FTS）に格納し、構成案・執筆のときにエージェンティック検索（AI が検索語を組み立てて DB を引き、要否を判断）で見つけて使う。
-  出典: ユーザー指示（2026-09-16）。
   Use when 「これ覚えて」「うちの事例はこれ」「この資料を使って」「この立場は取らない」、ファイルが添付されたとき、procedures/seo-outline.md 手順4、④執筆で根拠を探すとき。
   Not for 表記・装飾のルール（→ media-rules）、サイトの分類・CTA（→ site-profile.yaml）、認証情報（.env のみ）。
 metadata:

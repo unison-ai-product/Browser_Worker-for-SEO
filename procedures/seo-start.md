@@ -12,7 +12,7 @@ SEO Worker のタスク「$ARGUMENTS」を開始する。手順の正本は `doc
    - 運用ルールの注入（SessionStart の【SEO Worker 運用ルール】）が文脈に無ければ、プラグインの `hooks/scripts/session-rules.txt` を Read する。
    - `docs/steps/credential.md` を Read（認証フィールドの自己規律。WP ログインは人間が行う）。
    - 使えるブラウザ系統を確認する: `mcp__claude-in-chrome__*` が第一、無ければ `mcp__playwright__*`。両方無ければ ToolSearch で再検索してから判断。
-   - Google スプレッドシート連携（Drive の MCP ツール）と `python3`・`sqlite3` の有無を確認し、`knowledge/config/config.yaml` の `sheet_id` / `wp.site_url` / `own_domain` が埋まっているか見る。埋まっていなければ `/SEO設定` を案内して止まる（推測で埋めない）。
+   - Google スプレッドシート連携（Drive の MCP ツール）と `python3`・`sqlite3` の有無を確認し、`knowledge/config/config.yaml` の `sheet_id` / `wp.site_url` / `own_domain` が埋まっているか見る。埋まっていない項目は**未設定モード**として続行する（推測で埋めない。挙動の違いは procedures/seo-article.md §4 の表。完了報告に「未設定: sheet_id / own_domain / wp」のように列挙し、/SEO設定 を案内する）。
 
 1. 作業場とフラグを初期化する:
    ```bash

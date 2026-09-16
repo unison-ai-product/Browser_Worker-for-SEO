@@ -20,6 +20,9 @@
 - docs/steps/review.md・money-recovery.md・speed.md を本プラグインの手順に書き直し（旧プラグインの pre-send-verifier / bulk-send / strategy-advisor 参照を除去）。_common.sh / session-start.sh の url-guard・verify_allowlist 参照を除去。ga4-analysis の他プラグイン名を除去
 - seo-write 手順3: 図解は HTML → ローカル HTTP 配信 → スクリーンショット PNG（file:// は不可）
 
+### Added
+- 未設定モード: config.yaml の own_domain / sheet_id / WP 認証が無くても止まらず、挙動を切り替えて完了する（procedures/seo-article.md §4 の表）。keyword-gate.py `--profile` で own_domain が空なら内部リンク最小本数は警告扱い。WP 未設定なら outputs/<kw>/ にファイル納品
+
 ### Changed
 - keyword-gate.py: `--keyword` でタイトル判定を施策キーワードのトークンで行う。rules が未配置なら templates/gate_rules.yaml に fallback（警告付き）、入力欠落は traceback ではなく exit 2
 - seo-outline / gate-script: outline.md は骨組みだけ、補助情報は outline_notes.md に分離（H2 数の誤カウント防止）

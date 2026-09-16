@@ -32,6 +32,18 @@ argument-hint: <検索キーワード> [到達点]
 - 構成案の分類（到達難度・想定検索者・ファネル）は AI 仮置きのまま進み、報告に `判定: AI仮置き` を付ける。
 - ④ の投稿は下書きのみ（公開は人間）。投稿後のブラウザ確認（ov_done）は通しでも必須。
 
+## 4. 設定の有無で変わる挙動（未設定でも止まらない）
+
+| 設定（knowledge/config/config.yaml） | 未設定のとき | 設定済みのとき |
+|---|---|---|
+| `own_domain`（site-profile） | ③ の site:検索は省略し全 H2「内部リンク候補なし」。ゲートの内部リンク最小本数は警告扱い（`--profile` を渡す） | site:検索で候補を割り当て、内部リンク最小本数を FAIL 判定 |
+| WP 認証メモ（`.env` / `wp*.txt`）または `wp.site_url` | ④ は投稿せず `outputs/<kw>/` に article.html・meta.md・figures/*.png を納品し、`ov_done` に `NO_POST: WP 未設定` を記録して締める | REST で下書き投稿 → 管理画面でブラウザ確認（ov_done） |
+| `sheet_id` | シート追記を省略（seo.db のみ） | 各ステージでシートに 1 行追記 |
+| `knowledge/rules/gate_rules.yaml` | templates の既定を使う（ゲート出力に警告） | サイトの差分入りルールで判定 |
+| `knowledge/memory/original.md` | 立場 neutral、一次情報なしと明記 | 自社の主張・一次情報を構成案と本文に反映 |
+
+未設定モードでもゲート・ファクトチェック・敵対検証・送信前監査は省かない。完了報告に未設定項目を列挙し `/SEO設定` を案内する。
+
 ## 3. 締め
 
 - seo-start 手順6・7（ov_done → logs → session-log → k_done）。

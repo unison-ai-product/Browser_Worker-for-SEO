@@ -82,8 +82,19 @@ def split_sentences(text):
     return [s.strip() for s in re.split(r"(?<=[。！？!?])\s*", text) if s.strip()]
 
 
-def run(doc, required, rules, kind, title_override=None, meta=None, keyword=None, h2_median=None):
+def site_configured(profile_path):
+    """config.yaml の own_domain が埋まっているか（無い／空なら未設定モード）。"""
+    if not profile_path: return None
+    p = pathlib.Path(profile_path)
+    if not p.exists(): return False
+    cfg = load_yaml(p) or {}
+    return bool(str(cfg.get("own_domain") or "").strip())
+
+
+def run(doc, required, rules, kind, title_override=None, meta=None, keyword=None, h2_median=None, site_ok=None):
     fails, warns, info = [], [], {}
+    if site_ok is False:
+        info["site_mode"] = "unconfigured"
     if h2_median:
         tol = int((rules.get("structure") or {}).get("h2_tolerance") or 2)
         rules = dict(rules); st0 = dict(rules.get("structure") or {})
@@ -172,7 +183,9 @@ def run(doc, required, rules, kind, title_override=None, meta=None, keyword=None
         # links / alt
         lk = rules.get("links", {}) or {}
         nlinks = len(re.findall(r"\[\[link:|\]\(https?://", doc["body"])); info["links"] = nlinks
-        if lk.get("internal_links_min") and nlinks < lk["internal_links_min"]: fails.append(f"リンク {nlinks} < {lk['internal_links_min']}")
+        if lk.get("internal_links_min") and nlinks < lk["internal_links_min"]:
+            if site_ok is False: warns.append(f"内部リンク {nlinks} < {lk['internal_links_min']}（own_domain 未設定のため警告扱い。/SEO設定 profile で設定すると FAIL 判定になる）")
+            else: fails.append(f"リンク {nlinks} < {lk['internal_links_min']}")
         if lk.get("alt_required"):
             for mobj in re.finditer(r"!\[(.*?)\]\(", doc["body"]):
                 if not mobj.group(1).strip(): fails.append("alt の無い画像")
@@ -191,6 +204,10 @@ def selftest():
     if not any("副業" in f for f in r3["fails"]): missing.append("施策キーワードのトークン欠落（--keyword）")
     fenced = "# Webライターの始め方" + chr(10)*2 + "リード文です。" + chr(10)*2 + "## Webライターとは" + chr(10) + "本文です。[参考](https://example.jp/a)" + chr(10)*2 + "```" + chr(10) + "## コード内の見出し" + chr(10) + "```" + chr(10)
     if len(parse_md(fenced)["h2"]) != 1: missing.append("コードブロック内の ## を除外")
+    nolink = good.replace("[参考](https://example.jp/a)", "")
+    r5 = run(parse_md(nolink), [("Webライター", True)], rules, "article", site_ok=False)
+    r6 = run(parse_md(nolink), [("Webライター", True)], rules, "article", site_ok=True)
+    if r5["result"] != "PASS" or not any("内部リンク" in w for w in r5["warns"]) or r6["result"] != "FAIL": missing.append("未設定モードの内部リンク警告化")
     r4 = run(parse_md(good), [("Webライター", True)], rules, "article", h2_median=6)
     if not any("H2 1 <" in f for f in r4["fails"]): missing.append("--h2-median による H2 数の範囲判定")
     ok = not missing and r2["result"] == "PASS"
@@ -201,7 +218,7 @@ def selftest():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--outline"); ap.add_argument("--article"); ap.add_argument("--required"); ap.add_argument("--rules")
-    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--keyword", help="施策キーワード（タイトル判定）"); ap.add_argument("--h2-median", type=int, help="上位記事の H2 数の中央値（±structure.h2_tolerance で判定）"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--keyword", help="施策キーワード（タイトル判定）"); ap.add_argument("--h2-median", type=int, help="上位記事の H2 数の中央値（±structure.h2_tolerance で判定）"); ap.add_argument("--profile", help="knowledge/config/config.yaml（own_domain が空なら内部リンクは警告扱い）"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest: selftest()
     src = a.article or a.outline
@@ -228,7 +245,7 @@ def main():
     if not pathlib.Path(src).exists():
         print(json.dumps({"result": "ERROR", "error": f"入力が見つかりません: {src}"}, ensure_ascii=False)); sys.exit(2)
     doc = parse_md(pathlib.Path(src).read_text(encoding="utf-8"))
-    res = run(doc, required, load_yaml(rules_path), "article" if a.article else "outline", a.title, a.meta, a.keyword, a.h2_median)
+    res = run(doc, required, load_yaml(rules_path), "article" if a.article else "outline", a.title, a.meta, a.keyword, a.h2_median, site_configured(a.profile))
     if note: res.setdefault("warns", []).append(note)
     res["source"] = src
     txt = json.dumps(res, ensure_ascii=False, indent=2)

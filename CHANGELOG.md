@@ -9,6 +9,9 @@
 - `scripts/verify.sh` — CI / Release / `/SEO検証` が共通で呼ぶ検証コマンド（manifests・構造・スクリプト・hooks・DB・WP 拒否・リリース整合）
 - CHANGELOG.md
 
+### Changed
+- seo-serps: 実機試験の知見を反映（検索はボタン押下、AIO は read_page で取得、Search Console Insights を personalized の証拠に）
+
 ## [0.1.0] - 2026-09-16
 
 ### Added

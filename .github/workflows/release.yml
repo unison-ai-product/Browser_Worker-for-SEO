@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Tag matches plugin.json version
+        run: |
+          v=$(python -c "import json; print(json.load(open('.claude-plugin/plugin.json', encoding='utf-8'))['version'])")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != plugin.json v$v"; exit 1; }
+          m=$(python -c "import json; print(json.load(open('.claude-plugin/marketplace.json', encoding='utf-8'))['plugins'][0]['version'])")
+          [ "$m" = "$v" ] || { echo "marketplace.json version $m != $v"; exit 1; }
+
+      - name: Validate (same as CI)
+        run: |
+          python -m py_compile scripts/seo-db.py scripts/wp-draft.py scripts/keyword-gate.py
+          bash scripts/test-hooks.sh
+          python scripts/keyword-gate.py --selftest
+
+      - name: Build .plugin
+        run: |
+          python - <<'PY'
+          import zipfile, pathlib, json
+          v = json.load(open('.claude-plugin/plugin.json', encoding='utf-8'))['version']
+          out = pathlib.Path(f"seo-content-worker-{v}.plugin")
+          skip = {".git", ".github", "__pycache__", "memory", "knowledge", "outputs", ".claude"}
+          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+              for p in pathlib.Path(".").rglob("*"):
+                  if any(part in skip for part in p.parts) or p.is_dir() or p.suffix in (".pyc", ".plugin") or p.name == ".env": continue
+                  z.write(p, p.as_posix())
+          print(out, out.stat().st_size)
+          PY
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" seo-content-worker-*.plugin \
+            --title "seo-content-worker ${GITHUB_REF_NAME}" \
+            --generate-notes

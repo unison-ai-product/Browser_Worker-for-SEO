@@ -51,3 +51,8 @@ MIT License（LICENSE を参照）。
 ## 予定（v0.2）
 
 `/SEO分析`（GSC・GA4・LLM 引用）、`/リライト`（クエリ最適化・CV ストーリー・内部リンク・フレッシュネス）、定期巡回。入口は未作成、スキル（gsc-analysis / ga4-analysis / llmo-analysis）は v0.1 に同梱。
+
+## リリース
+
+- `main` が marketplace の参照先。安定版は Git タグ `vX.Y.Z`（GitHub Releases に `.plugin` を添付）。
+- 版上げは `.claude-plugin/plugin.json` と `marketplace.json` の `version` を揃えて更新し、`git tag vX.Y.Z && git push origin vX.Y.Z`。Release ワークフローが検証→ビルド→Release 作成を行う。

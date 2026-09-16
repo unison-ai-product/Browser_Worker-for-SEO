@@ -7,7 +7,7 @@ SEO 記事のコンテンツ制作を、①SERPs解析 → ②記事分析 → �
 
 1. Cowork の設定 → プラグインでこのリポジトリを marketplace として追加し **seo-content-worker** を有効化。
 2. Claude in Chrome をコネクタで ON（Google・WP のログイン済みブラウザを使う）。Google ドライブ連携も ON（スプレッドシート出力）。
-3. `/SEO設定` を順に: `db`（SQLite 初期化）→ `sheet`（成果物シート・キーワードマップ）→ `wp`（サイト URL・投稿方法。REST を使うならアプリケーションパスワードを **あなたが** `.env` に置く）→ `profile`（想定検索者・ファネル・カテゴリ・CTA などサイト固有の値）→ `rules`（表記・装飾の差分抽出）→ 必要なら `memory`（自社の主張・一次情報の取り込み）。
+3. `/SEO設定` を順に: `db`（SQLite 初期化）→ `sheet`（成果物シート・キーワードマップ）→ `wp`（サイト URL・投稿方法。REST を使うならアプリケーションパスワードを **あなたが** ワークスペース直下のテキストファイル（`.env` または `wp*.txt`、2 行）に置く。チャットには貼らない）→ `profile`（想定検索者・ファネル・カテゴリ・CTA などサイト固有の値）→ `rules`（表記・装飾の差分抽出）→ 必要なら `memory`（自社の主張・一次情報の取り込み）。
 
 ## 使い方
 
@@ -42,7 +42,7 @@ scripts/       seo-db.py（SQLite）/ wp-draft.py（REST 下書き）/ keyword-g
 docs/          steps-reference / agent-roster / command-registry / conventions / steps/
 ```
 
-ワークスペース側（プラグインには含めない）: `knowledge/`（config / rules / memory / data/seo.db / logs / sites）、`memory/`（.workflow フラグ・作業ファイル）、`.env`。
+ワークスペース側（プラグインには含めない）: `knowledge/`（config / rules / memory / data/seo.db / logs / sites）、`memory/`（.workflow フラグ・作業ファイル）、`.env` / `wp*.txt`（WP 認証。人間が置く）。
 
 ## ライセンス
 

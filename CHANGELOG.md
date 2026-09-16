@@ -15,7 +15,7 @@
 - keyword-gate.py: `--required` のファイルが無ければ exit 2（黙って PASS しない）、未指定は警告。`--h2-median` で H2 数を中央値 ± h2_tolerance で判定。コードブロック内の `## ` を見出しに数えない。表・画像行を文長判定から除外。selftest に `--keyword` / fence / h2-median の検査を追加
 - seo-analysis 手順8: required_keywords.txt と h2_median.txt の書き出しを明記。seo-write 手順6 にも `--keyword` `--h2-median` を追加、`--media` は 1 枚ずつ
 - seo-db.py knowledge search: 部分一致フォールバックを title / meta_description / body / tags に拡張（2 文字語が 0 件になる問題）
-- wp-draft.py: `https://` 以外のサイトを拒否
+- wp-draft.py: `https://` 以外のサイトを拒否。認証ファイルは `.env` だけでなく `*.env` / `wp*.txt` 等のメモでもよい（BOM・全角空白を許容。AI は存在確認のみ）
 - seo-db.py: JSON のキーがテーブルに無い列なら traceback ではなく列一覧付きで exit 2。`--keyword` を全テーブルの add で有効化
 - docs/steps/review.md・money-recovery.md・speed.md を本プラグインの手順に書き直し（旧プラグインの pre-send-verifier / bulk-send / strategy-advisor 参照を除去）。_common.sh / session-start.sh の url-guard・verify_allowlist 参照を除去。ga4-analysis の他プラグイン名を除去
 - seo-write 手順3: 図解は HTML → ローカル HTTP 配信 → スクリーンショット PNG（file:// は不可）

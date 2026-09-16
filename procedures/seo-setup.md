@@ -10,7 +10,12 @@ argument-hint: [wp / sheet / profile / rules / memory / packs / db / feedback]
 ## wp — WordPress 接続
 
 1. サイト URL・投稿方法（rest / browser / both = REST で送りブラウザで確認）・既定カテゴリ・投稿者名を聞いて config.yaml の `wp:` に書く。
-2. REST を使う場合: **アプリケーションパスワードはユーザー本人が発行し、ワークスペース直下の `.env` に `WP_USER=` `WP_APP_PASSWORD=` として置く**（AI は値を聞かない・書かない・表示しない）。案内文だけ出す。
+2. REST を使う場合: **アプリケーションパスワードはユーザー本人が発行し、ワークスペース直下にテキストファイルとして置く**（AI は値を聞かない・書かない・表示しない・チャットで受け取らない）。ファイル名は `.env` でも `wp.env` `wp-credentials.txt` などでもよい（`.env` / `*.env` / `wp*.txt` / `WP*.txt` / `wordpress*.txt` を順に探し、`WP_APP_PASSWORD=` を含む最初のものを使う）。中身は 2 行:
+   ```
+   WP_USER=WP のユーザー名
+   WP_APP_PASSWORD=WP で発行したアプリケーションパスワード
+   ```
+   AI が行うのは `ls` での存在確認だけ（`cat` / Read は禁止）。置かれていなければ上の案内文を出して待つ。
 3. 接続確認: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/wp-draft.py --site <url> --check`（認証と `posts` 権限の有無だけ返す。投稿はしない）。
 4. ブラウザ運用の場合: Claude in Chrome で管理画面を開き（ログインは人間）、投稿画面のエディタ種別・使えるブロック・カテゴリ一覧を read_page で取って `knowledge/sites/wordpress.md` に記録（フェーズ①のマッピング。変更操作はしない）。
 

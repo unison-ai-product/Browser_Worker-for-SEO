@@ -5,5 +5,9 @@ memory/
 knowledge/
 outputs/
 .env
+*.env
+wp*.txt
+WP*.txt
+wordpress*.txt
 .claude/
 seo-content-worker.plugin

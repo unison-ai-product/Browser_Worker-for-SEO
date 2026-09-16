@@ -13,15 +13,35 @@ if hasattr(_sys.stdout, 'reconfigure'):
     _sys.stdout.reconfigure(encoding='utf-8'); _sys.stderr.reconfigure(encoding='utf-8')
 
 
+CRED_GLOBS = (".env", "*.env", "wp*.txt", "WP*.txt", "wordpress*.txt")
+
+
+def find_cred_file():
+    """ワークスペース直下で WP_APP_PASSWORD= を含む最初のファイルを返す（.env 以外の名前のメモでもよい）。"""
+    seen = []
+    for g in CRED_GLOBS:
+        for p in sorted(pathlib.Path(".").glob(g)):
+            if p.is_file() and p not in seen:
+                seen.append(p)
+    for p in seen:
+        try:
+            if "WP_APP_PASSWORD" in p.read_text(encoding="utf-8-sig"):
+                return p
+        except Exception:
+            continue
+    return None
+
+
 def load_env():
-    p = pathlib.Path(".env")
-    if p.exists():
-        for line in p.read_text(encoding="utf-8").splitlines():
-            if "=" in line and not line.strip().startswith("#"):
+    p = find_cred_file()
+    if p:
+        for line in p.read_text(encoding="utf-8-sig").splitlines():
+            line = line.replace("　", " ").strip()
+            if "=" in line and not line.startswith("#"):
                 k, v = line.split("=", 1); os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
     u, pw = os.environ.get("WP_USER"), os.environ.get("WP_APP_PASSWORD")
     if not u or not pw:
-        print(json.dumps({"ok": False, "error": ".env に WP_USER / WP_APP_PASSWORD がありません（人間が置く）"}, ensure_ascii=False)); sys.exit(2)
+        print(json.dumps({"ok": False, "error": "WP_USER / WP_APP_PASSWORD が見つかりません。ワークスペース直下に .env か wp*.txt（2 行: WP_USER=… / WP_APP_PASSWORD=…）を人間が置いてください", "searched": list(CRED_GLOBS)}, ensure_ascii=False)); sys.exit(2)
     return "Basic " + base64.b64encode(f"{u}:{pw}".encode()).decode()
 
 
@@ -39,6 +59,8 @@ def req(site, path, auth, method="GET", body=None, headers=None):
             return resp.status, json.loads(resp.read().decode() or "null")
     except urllib.error.HTTPError as e:
         return e.code, {"error": e.read().decode()[:500]}
+    except (urllib.error.URLError, OSError) as e:
+        return 0, {"error": f"接続できません: {getattr(e, 'reason', e)}"}
 
 
 def main():

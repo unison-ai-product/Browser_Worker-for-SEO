@@ -218,12 +218,18 @@ def selftest():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--outline"); ap.add_argument("--article"); ap.add_argument("--required"); ap.add_argument("--rules")
-    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--keyword", help="施策キーワード（タイトル判定）"); ap.add_argument("--h2-median", type=int, help="上位記事の H2 数の中央値（±structure.h2_tolerance で判定）"); ap.add_argument("--profile", help="knowledge/config/config.yaml（own_domain が空なら内部リンクは警告扱い）"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--keyword", help="施策キーワード（タイトル判定）"); ap.add_argument("--h2-median", type=int, help="上位記事の H2 数の中央値（±structure.h2_tolerance で判定）"); ap.add_argument("--h2-median-file", help="中央値を書いたファイル（② 手順8 の h2_median.txt）"); ap.add_argument("--profile", help="knowledge/config/config.yaml（own_domain が空なら内部リンクは警告扱い）"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest: selftest()
     src = a.article or a.outline
     if not (src and a.rules):
         print(json.dumps({"result": "ERROR", "error": "--outline/--article と --rules が必要です"}, ensure_ascii=False)); sys.exit(2)
+    if a.h2_median_file:
+        hp = pathlib.Path(a.h2_median_file)
+        txt = hp.read_text(encoding="utf-8").strip() if hp.exists() else ""
+        if not txt.isdigit():
+            print(json.dumps({"result": "ERROR", "error": f"H2 中央値のファイルが無いか数字ではありません: {a.h2_median_file}（② 記事分析の手順8 で書き出します）"}, ensure_ascii=False)); sys.exit(2)
+        a.h2_median = int(txt)
     required = []
     if a.required and not pathlib.Path(a.required).exists():
         print(json.dumps({"result": "ERROR", "error": f"必須キーワードのファイルが見つかりません: {a.required}（② 記事分析の手順8 で書き出します）"}, ensure_ascii=False)); sys.exit(2)

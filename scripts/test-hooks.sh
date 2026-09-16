@@ -51,6 +51,26 @@ got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"wp eval \"wp_pub
 check "Publish Guard: wp eval wp_publish_post は deny" 'Publish Guard' "$got"
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"wp db query \"UPDATE wp_posts SET post_status=publish WHERE ID=1\""}}' | bash "$SC/publish-guard.sh")
 check "Publish Guard: wp db query post_status=publish は deny" 'Publish Guard' "$got"
+# 6a2. Publish Guard: REST 直叩きは wp-draft.py 以外一律 deny / wp post list は通す
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"curl -u u:p -X POST https://x/wp-json/wp/v2/posts -d @body.json"}}' | bash "$SC/publish-guard.sh")
+check "Publish Guard: curl wp-json/posts は deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python -c \"import requests;requests.post(\u0027https://x/?rest_route=/wp/v2/posts\u0027,json={\u0027status\u0027:\u0027publish\u0027})\""}}' | bash "$SC/publish-guard.sh")
+check "Publish Guard: rest_route 経由も deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"wp post list --post_status=publish --field=ID"}}' | bash "$SC/publish-guard.sh")
+check "Publish Guard: wp post list（読むだけ）は通す" 'EMPTY' "$got"
+# 6a3. Secret Guard: 認証メモの Read / cat は deny、ls は通す、wp-draft.py は通す
+got=$(printf '%s' '{"tool_name":"Read","tool_input":{"file_path":"C:\\ws\\wp接続.txt"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: Read wp*.txt は deny" 'Secret Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Read","tool_input":{"file_path":"/ws/.env"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: Read .env は deny" 'Secret Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"cat wp.txt"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: cat wp.txt は deny" 'Secret Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"ls -la .env wp.txt"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: ls は通す" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --check"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: wp-draft.py は通す" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"Read","tool_input":{"file_path":"/ws/memory/work/kw/outline.md"}}' | bash "$SC/secret-guard.sh")
+check "Secret Guard: 通常ファイルは通す" 'EMPTY' "$got"
 # 6b. PSV Guard: psv_done 無しの draft 投稿は deny（gate_pass あり）
 rm -f "$DELVEWORK_WF_DIR/psv_done"; echo PASS > "$DELVEWORK_WF_DIR/gate_pass"
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --title t --content a.html --status draft"}}' | bash "$SC/publish-guard.sh")
@@ -58,10 +78,22 @@ check "PSV Guard: psv_done 無しは deny" 'PSV Guard' "$got"
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --check"}}' | bash "$SC/publish-guard.sh")
 check "PSV Guard: --check は通す" 'EMPTY' "$got"
 touch "$DELVEWORK_WF_DIR/psv_done"
-# 6c. Workflow Gate: ブラウザの「公開」クリックは常時 deny / stage=write は psv_done まで deny
+# 6c. Publish Guard（ブラウザ）: Playwright の element 説明は止まる / Chrome の ref クリックは止められない（既知の限界を明示） / 本文入力は止めない
 wf_ready
-got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_12","element":"公開 button"}}' | bash "$SC/workflow-gate.sh")
-check "Publish Click Guard: 公開ボタンは deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_12"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: Chrome の ref クリックは判定不能で通る（既知の限界）" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"type","text":"記事の公開ボタンの押し方を解説します。更新も同様です。"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: 本文に「公開ボタン」「更新」があっても type は通す" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__javascript_tool","tool_input":{"action":"javascript_exec","text":"wp.data.dispatch(\u0027core/editor\u0027).editPost({status:\u0027publish\u0027})"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: JS editPost(status:publish) は deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"key","text":"ctrl+alt+p"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: ctrl+alt+p は deny" 'Publish Guard' "$got"
+echo write > "$DELVEWORK_WF_DIR/stage"; touch "$DELVEWORK_WF_DIR/psv_done"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__javascript_tool","tool_input":{"action":"javascript_exec","text":"document.title"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: stage=write 中は読み取り JS も deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"key","text":"PageDown"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Guard: stage=write 中は key も deny" 'Publish Guard' "$got"
+rm -f "$DELVEWORK_WF_DIR/stage" "$DELVEWORK_WF_DIR/psv_done"
 got=$(printf '%s' '{"tool_name":"mcp__playwright__browser_click","tool_input":{"element":"Publish button","ref":"e12"}}' | bash "$SC/workflow-gate.sh")
 check "Publish Click Guard: Publish button は deny" 'Publish Guard' "$got"
 got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_13","element":"下書き保存 button"}}' | bash "$SC/workflow-gate.sh")

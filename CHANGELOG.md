@@ -9,6 +9,13 @@
 - `scripts/verify.sh` — CI / Release / `/SEO検証` が共通で呼ぶ検証コマンド（manifests・構造・スクリプト・hooks・DB・WP 拒否・リリース整合）
 - CHANGELOG.md
 
+### Fixed（外部監査 2 回目 2026-09-16）
+- Publish Guard（Bash）: REST の直叩き（curl / requests / `wp-json/wp/v2/posts` / `rest_route=`）は wp-draft.py 以外一律拒否（JSON 本文の status は文字判定で網羅できないため）。`wp post list/get --post_status=publish`（読むだけ）は通す
+- Publish Guard（ブラウザ）: 文字判定はクリック系（Playwright の element 説明）・JS・ショートカット・key にだけ当て、type / form_input の本文（「公開ボタンの押し方」等）では止めない。JS の `editPost({status:'publish'})` `Ctrl+Alt+P` を拒否。stage=write 中は JS・ショートカット・key を全面停止。**Claude in Chrome の ref / 座標クリックは判定できない**ことをコメント・手順書・テストに明記
+- Secret Guard（新設）: WP 認証メモ（.env / *.env / wp*.txt）の Read / cat 等を拒否（ls / test / wp-draft.py は許可）
+- keyword-gate.py `--h2-median-file`: ファイルが無い／数字でないときは分かりやすい exit 2
+- test-hooks.sh: 41 項目
+
 ### Fixed（外部監査 2026-09-16）
 - Publish Guard: `wp eval` / `wp db query` / `wp post update --post_status` 経由の公開も拒否。wp-draft.py の投稿に psv_done（送信前監査 GO）の証跡を要求（`--check` は免除）
 - Workflow Gate: ブラウザ操作の「公開 / 予約投稿 / 更新 / Publish / Schedule」を常時拒否（文字列を持つ操作のみ。座標クリックは既知の限界）。stage=write の間は psv_done まで変更操作を止める（旧 bulk_send 条件を置換）

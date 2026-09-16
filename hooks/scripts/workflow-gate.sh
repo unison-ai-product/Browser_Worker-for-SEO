@@ -54,13 +54,33 @@ if [ -f "$WF_DIR/money_alert" ]; then
     "【Money Watch】停止中（money_alert）。復帰は docs/steps/money-recovery.md を Read。"
 fi
 
+# Publish Guard（ブラウザ）— 止められる範囲は限られる（正直に書く）:
+#  - Claude in Chrome の computer クリックは ref か座標だけで要素名を持たない → ここでは止められない。
+#    Playwright の browser_click は element 説明を持つので文字で止まる。
+#  - 文字判定はクリック系・JS・ショートカット・key にだけ当てる。type / form_input の本文（記事に「公開ボタンの押し方」と書く等）には当てない。
+#  - 硬い防御は (a) 手順書「押すのは下書き保存のみ」 (b) stage=write 中は JS 実行・ショートカット・key を全面停止（editPost / Ctrl+Alt+P の判別ができないため）。
+STAGE_VAL="$(cat "$WF_DIR/stage" 2>/dev/null | tr -d '[:space:]')"
+IS_CLICK_OP=0
+printf '%s' "$STDIN_JSON" | grep -qE 'browser_click|"action"[[:space:]]*:[[:space:]]*"(left_click|right_click|middle_click|double_click|triple_click|click)"' && IS_CLICK_OP=1
+IS_CODE_OP=0
+printf '%s' "$STDIN_JSON" | grep -qE 'javascript_tool|browser_evaluate|browser_run_code|shortcuts_execute|browser_press_key|"action"[[:space:]]*:[[:space:]]*"(key|hold_key)"' && IS_CODE_OP=1
+if [ "$IS_CLICK_OP" = "1" ] && printf '%s' "$STDIN_TEXT" | grep -qiE '"(element|name|label|text|description|selector|target)"[[:space:]]*:[[:space:]]*"[^"]*(公開|予約投稿|Publish|Schedule|更新|Update)'; then
+  deny "【Publish Guard】WordPress の「公開」「予約投稿」「更新」に相当するクリックは AI には許可されていません。このプラグインが押してよいのは「下書き保存」だけです。公開はユーザー本人が WP 管理画面で行ってください。"
+fi
+if [ "$IS_CODE_OP" = "1" ] && printf '%s' "$STDIN_TEXT" | grep -qiE "post_status[^a-z_]{0,3}(=|:|=>)[[:space:]\"']*(publish|future|private)|wp_publish_post|status[[:space:]]*:[[:space:]]*[\"']?(publish|future|private)|editPost|savePost|ctrl\+alt\+p|alt\+shift\+p"; then
+  deny "【Publish Guard】JS / ショートカット経由の公開（editPost({status:'publish'}) / Ctrl+Alt+P 等）は AI には許可されていません。公開はユーザー本人が WP 管理画面で行ってください。"
+fi
+if [ "$STAGE_VAL" = "write" ] && [ ! -f "$WF_DIR/k_done" ] && [ "$IS_CODE_OP" = "1" ]; then
+  deny "【Publish Guard】④ 記事作成（stage=write）中は JS 実行・ショートカット・key 操作を使えません（公開ショートカットや editPost と区別できないため）。貼り付けは form_input、保存は「下書き保存」ボタンのクリックで行ってください。"
+fi
+
 # JS実行系（javascript_tool / browser_evaluate / browser_run_code）は読み取り計測にも使うため、
 # 明らかに読み取り専用のコードだけ workflow-init ゲート（active/b4/e）を免除して素通しする。
 # 注意: 任意 JS の mutation 判定を denylist で完全網羅はできない（eval/Function/難読化で回避可能）。
 # よって denylist は best-effort に過ぎず、硬い防御は上の Money Watch と Credential Guard・URL Guard が担う。
 # denylist に当たる or 判定不能なコードは素通しせず、下の workflow ゲートを必ず通す（フェイルクローズ寄り）。
 if printf '%s' "$STDIN_JSON" | grep -qE '(javascript_tool|browser_evaluate|browser_run_code)'; then
-  if ! printf '%s' "$STDIN_JSON" | grep -qE '\.click\(|\.submit\(|requestSubmit|dispatchEvent|\.value[[:space:]]*=|innerHTML[[:space:]]*=|insertAdjacentHTML|location(\.href)?[[:space:]]*=|location\.(assign|replace)|\.href[[:space:]]*=|window\.open|fetch\(|XMLHttpRequest|sendBeacon|navigator\.send|localStorage\.(set|remove|clear)|sessionStorage\.(set|remove|clear)|document\.cookie[[:space:]]*=|\.focus\(\).*type|execCommand|\beval\b|new[[:space:]]+Function|Function\(|setTimeout|setInterval|\bimport\b|Reflect\.(apply|set)|\[[[:space:]]*["'"'"']|\[[a-zA-Z_$][^]]*\][[:space:]]*\('; then
+  if ! printf '%s' "$STDIN_JSON" | grep -qE '\.click\(|\.submit\(|requestSubmit|dispatchEvent|\.value[[:space:]]*=|innerHTML[[:space:]]*=|insertAdjacentHTML|location(\.href)?[[:space:]]*=|location\.(assign|replace)|\.href[[:space:]]*=|window\.open|fetch\(|XMLHttpRequest|sendBeacon|navigator\.send|localStorage\.(set|remove|clear)|sessionStorage\.(set|remove|clear)|document\.cookie[[:space:]]*=|\.focus\(\).*type|execCommand|dispatch\(|editPost|savePost|apiFetch|wp\.ajax|post_status|\beval\b|new[[:space:]]+Function|Function\(|setTimeout|setInterval|\bimport\b|Reflect\.(apply|set)|\[[[:space:]]*["'"'"']|\[[a-zA-Z_$][^]]*\][[:space:]]*\('; then
     exit 0
   fi
 fi
@@ -93,16 +113,8 @@ if [ ! -f "$WF_DIR/b4_done" ] || [ -z "$PHASE_VAL" ]; then
     "【SEO Worker Gate】B-4未完了（b4_done または phase が空）。手順: procedures/seo-start.md"
 fi
 
-# Publish Click Guard: WordPress の「公開」「予約投稿」「更新（公開済み記事の上書き）」に相当する操作はフラグの有無に関係なく常時拒否。
-# 判定できるのは tool_input に文字列がある操作（ref の要素名・element 説明・入力テキスト・JS）だけ。座標クリックは文字列を持たないので
-# ここでは止まらない — 手順書（seo-write 手順8）の「押すのは下書き保存のみ」と pre-publish-verifier が残りを担う（既知の限界）。
-if printf '%s' "$STDIN_TEXT" | grep -qiE '"(公開|公開する|今すぐ公開|予約投稿|予約|更新|Publish|Schedule|Update)"|(button|ボタン)[^"]{0,20}(公開|Publish|Schedule)|(公開|Publish|Schedule)[^"]{0,20}(button|ボタン)|post_status[^a-z_]{0,3}(=|:)[[:space:]"]*(publish|future|private)|wp_publish_post|"status"[[:space:]]*:[[:space:]]*"(publish|future|private)"'; then
-  deny "【Publish Guard】WordPress の「公開」「予約投稿」「更新」に相当する操作は AI には許可されていません。このプラグインが押してよいのは「下書き保存」だけです。公開はユーザー本人が WP 管理画面で行ってください。"
-fi
-
 # ④ 記事作成（stage=write）の間は pre-publish-verifier 監査完了（psv_done）までブラウザの変更操作を止める
 # （WP 管理画面への貼り付け・下書き保存は監査後。図解の PNG 化は navigate + screenshot だけなのでここには来ない）
-STAGE_VAL="$(cat "$WF_DIR/stage" 2>/dev/null | tr -d '[:space:]')"
 if [ "$STAGE_VAL" = "write" ] && [ ! -f "$WF_DIR/psv_done" ]; then
   deny_decay psv \
     "【SEO Worker Gate】④ 記事作成では WP への投稿の前に pre-publish-verifier の敵対的監査（VERDICT: GO）が必要です。監査完了後に touch memory/.workflow/psv_done してからブラウザの変更操作を行ってください（手順の正本: procedures/seo-write.md 手順7）。フラグだけ立てる迂回は禁止です。" \

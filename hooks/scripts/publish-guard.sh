@@ -11,10 +11,19 @@ CMD="$(printf '%s' "$STDIN_TEXT" | sed -n 's/.*"command":"\(.*\)".*/\1/p' | head
 [ -n "$CMD" ] || CMD="$STDIN_TEXT"
 
 # (a0) WP-CLI / PHP / SQL 経由の公開は書き方を問わず拒否（wp post update --post_status / wp eval wp_publish_post / wp db query UPDATE ... post_status）
-if printf '%s' "$CMD" | grep -qiE 'wp_publish_post|wp_update_post|post_status|wp[ ]+(eval|eval-file|db[ ]+query|post[ ]+(publish|update))'; then
+# 読むだけの `wp post list/get --post_status=publish` は対象外（update / eval / db を伴わない場合）
+WP_READ_ONLY=0
+if printf '%s' "$CMD" | grep -qiE 'wp[ ]+post[ ]+(list|get)' && ! printf '%s' "$CMD" | grep -qiE 'wp[ ]+(eval|eval-file|db)|post[ ]+(update|create|publish)|wp_publish_post|wp_update_post'; then WP_READ_ONLY=1; fi
+if [ "$WP_READ_ONLY" = "0" ] && printf '%s' "$CMD" | grep -qiE 'wp_publish_post|wp_update_post|post_status|wp[ ]+(eval|eval-file|db[ ]+query|post[ ]+(publish|update))'; then
   if printf '%s' "$CMD" | grep -qiE 'publish|future|private'; then
     deny "【Publish Guard】WP-CLI / PHP / SQL を経由した公開ステータスの変更（wp eval / wp db query / wp post update --post_status=publish 等）は AI には許可されていません。公開はユーザー本人が WP 管理画面で行ってください。"
   fi
+fi
+
+# (a1) REST の直叩き（curl / python requests / wp-json・rest_route）は書き方を問わず拒否。正規の経路は wp-draft.py だけ
+#      （JSON 本文の status はエスケープ・ファイル参照・別言語で書けるので文字判定では網羅できない）
+if printf '%s' "$CMD" | grep -qiE 'wp-json/wp/v2/(posts|pages)|rest_route=/?wp/v2/(posts|pages)' && ! printf '%s' "$CMD" | grep -qiE 'wp-draft\.py'; then
+  deny "【Publish Guard】WordPress REST（wp-json/wp/v2/posts）の直接呼び出しは AI には許可されていません。投稿は scripts/wp-draft.py（下書きのみ）を使ってください。"
 fi
 
 # WP 投稿を伴うコマンドか（wp-draft.py / wp-json/wp/v2/posts への POST・PUT / wp post create）

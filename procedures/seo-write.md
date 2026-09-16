@@ -16,14 +16,14 @@ argument-hint: <検索キーワード>
 4. **ファクトチェック**: 完成したユニットから順に fact-checker（Haiku）へ。数値・固有名詞・法規に触れる断定・AIO と矛盾する記述・出典の無い統計を洗い、`units/U<n>.facts.md` に「要修正（根拠）/ 要出典 / OK」で返させる。要修正は unit-drafter に差し戻し（同じ体を SendMessage で継続）。
 5. **統合**: fix-integrator（Opus, effort medium）に 3 ユニット + 図解 + facts + media-rules を渡し、(a) 文体・用語の統一 (b) 装飾ルール（見出し記法・強調・表・箇条書き・引用の書式）の適用 (c) 図解の挿入位置と alt (d) 内部リンクの埋め込み (e) メタディスクリプション・スラッグ案、を行わせて `memory/work/<kw>/article.md` を作る。
 6. **ルール＆レギュレーションゲート**（通るまで修正ループ、最大3周）:
-   - 機械判定: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py --article memory/work/<kw>/article.md --required memory/work/<kw>/required_keywords.txt --keyword "<kw>" --h2-median $(cat memory/work/<kw>/h2_median.txt) --profile knowledge/config/config.yaml --rules knowledge/rules/gate_rules.yaml`（必須KW網羅・施策KW のタイトル判定・禁止語・文字数・見出し数・リンク数・alt 欠落。③ と同じ基準）。
+   - 機械判定: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py --article memory/work/<kw>/article.md --required memory/work/<kw>/required_keywords.txt --keyword "<kw>" --h2-median-file memory/work/<kw>/h2_median.txt --profile knowledge/config/config.yaml --rules knowledge/rules/gate_rules.yaml`（必須KW網羅・施策KW のタイトル判定・禁止語・文字数・見出し数・リンク数・alt 欠落。③ と同じ基準）。
    - 目視判定: keyword-gate（Haiku）に機械判定の結果と記事を渡し、media-rules の各項目を PASS/FAIL で返させる。
    - FAIL があれば fix-integrator へ戻す。3周で通らなければ止めてユーザーに報告（緩めない）。
    - すべて PASS したら証跡を記録（Publish Guard がこれを見る）:
      ```bash
      echo "PASS $(date +%FT%T) rounds=<n>" > memory/.workflow/gate_pass
      ```
-7. **送信前監査**: pre-publish-verifier（Haiku）に article.md・outline.md・媒体ルール・WP 投稿計画（タイトル / スラッグ / カテゴリ / 下書き）を渡して VERDICT（GO / NO-GO / UNVERIFIABLE）。GO なら `touch memory/.workflow/psv_done` して次へ（stage=write の間、psv_done が無いとブラウザの変更操作と wp-draft.py の投稿は Workflow Gate / Publish Guard が止める）（**通し /SEO記事 では人の承認を取らない**。下書きなので取り返しが付く）。単体 /記事作成 で呼ばれたときも同じだが、投稿前に VERDICT を 1 画面で報告する。NO-GO / UNVERIFIABLE は投稿せず理由を報告して止まる。
+7. **送信前監査**: pre-publish-verifier（Haiku）に article.md・outline.md・媒体ルール・WP 投稿計画（タイトル / スラッグ / カテゴリ / 下書き）を渡して VERDICT（GO / NO-GO / UNVERIFIABLE）。GO なら `touch memory/.workflow/psv_done` して次へ（stage=write の間、psv_done が無いとブラウザの変更操作と wp-draft.py の投稿は Workflow Gate / Publish Guard が止める）（**通し /SEO記事 では人の承認を取らない**。下書きなので取り返しが付く）。ブラウザ投稿では JS 実行・ショートカット・key は stage=write 中に使えない（Publish Guard）。貼り付けは form_input、保存は「下書き保存」ボタンのクリックのみ。単体 /記事作成 で呼ばれたときも同じだが、投稿前に VERDICT を 1 画面で報告する。NO-GO / UNVERIFIABLE は投稿せず理由を報告して止まる。
 8. **WP 下書き投稿**（どちらか。config.yaml の `wp.method`）。**WP 未設定（認証メモが無い / `wp.site_url` が空）なら投稿せず**、`outputs/<kw>/` に article.html・article.md・meta.md・figures/*.png をコピーして納品し、`echo "NO_POST: WP 未設定（outputs/<kw>/ に納品）" > memory/.workflow/ov_done` で手順9 の代わりとし、手順10 へ進む（psv の VERDICT は取る）:
    - **REST**: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/wp-draft.py --site <site_url> --title "<t>" --content memory/work/<kw>/article.html --status draft [--slug --category --excerpt]`（.env の WP_USER / WP_APP_PASSWORD を読む。値を表示しない）。図解は `--media figures/<slug>.png` を **1 枚ずつ**実行して先にメディアへアップし（glob は受け付けない）、返った URL で本文の参照を差し替える。
    - **ブラウザ**: Claude in Chrome で WP 管理画面 → 投稿 → 新規追加。`knowledge/sites/wordpress.md` の装飾ルール（ブロック / クラシック、使うブロック種）に従って貼り付け、**「下書き保存」のみ**押す。「公開」「予約」は押さない。

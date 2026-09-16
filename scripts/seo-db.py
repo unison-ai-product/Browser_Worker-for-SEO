@@ -52,6 +52,10 @@ def insert(c, table, row, jsonify=()):
     for k in jsonify:
         if k in row and not isinstance(row[k], str):
             row[k] = json.dumps(row[k], ensure_ascii=False)
+    valid = [r[1] for r in c.execute(f"PRAGMA table_info({table})")]
+    unknown = [k for k in row if k not in valid]
+    if unknown:
+        sys.stderr.write(json.dumps({"error": f"{table} に無い列: {unknown}", "columns": [v for v in valid if v not in ("id", "created_at")]}, ensure_ascii=False) + chr(10)); sys.exit(2)
     cols = [k for k in row if k != "id"]
     sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})"
     cur = c.execute(sql, [row[k] for k in cols])
@@ -93,7 +97,7 @@ def cmd_add(table):
     def run(a):
         c = conn(); ids = []
         for row in load_json(a.json):
-            if table == "serp_runs" and a.keyword:
+            if a.keyword:
                 row["keyword"] = a.keyword
             ids.append(insert(c, table, row, JSON_COLS[table]))
         c.commit(); out({"inserted": ids, "table": table})

@@ -12,8 +12,8 @@ argument-hint: [quick / full]
 
 ## quick（既定）
 
-3. `bash ${CLAUDE_PLUGIN_ROOT}/scripts/test-hooks.sh` を実行して PASS/FAIL を報告（Workflow Gate 未初期化 deny / Publish Guard の publish deny / gate_pass 無し deny / Subagent Guard の配役外 deny / RM Guard / Flag Guard / drop-guard の警告）。
-4. コマンド台帳 `docs/command-registry.md` の各行に対応する `commands/*.md` と `procedures/*.md` が存在するか（Glob）。エージェント配役表 `docs/agent-roster.md` の名前が `agents/*.md` と一致するか。
+3. `bash ${CLAUDE_PLUGIN_ROOT}/scripts/verify.sh` を実行し、出力の PASS/FAIL をそのまま表にして報告する（manifests・構造・コマンド→手順書・配役表・スクリプト・hooks・ゲート selftest・SQLite・WP 拒否。CI と同じ内容）。
+4. verify.sh が FAIL のときだけ、該当項目を個別に確認して原因を 1 行で添える（プラグイン本体の修正は開発者作業。勝手に直さない）。
 
 ## full
 

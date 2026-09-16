@@ -38,7 +38,7 @@ skills/        seo-analysis / seo-outline / content-marketing / seo-writing(refe
 agents/        serp-collector, article-analyzer, unit-drafter, diagram-maker（Sonnet）/ fact-checker, keyword-gate, pre-publish-verifier（Haiku）/ fix-integrator, adversarial-reviewer（Opus）
 hooks/         hooks.json + scripts（ゲート 8 本 + session-rules.txt）
 templates/     sheet-layout.md（列定義）/ db-schema.sql / config.yaml / site-profile.example.yaml / gate_rules.yaml / analysis.example.yaml / figure.html
-scripts/       seo-db.py（SQLite）/ wp-draft.py（REST 下書き）/ keyword-gate.py（機械判定）/ test-hooks.sh
+scripts/       seo-db.py（SQLite）/ wp-draft.py（REST 下書き）/ keyword-gate.py（機械判定）/ verify.sh（検証一式）/ test-hooks.sh
 docs/          steps-reference / agent-roster / command-registry / conventions / steps/
 ```
 
@@ -55,4 +55,5 @@ MIT License（LICENSE を参照）。
 ## リリース
 
 - `main` が marketplace の参照先。安定版は Git タグ `vX.Y.Z`（GitHub Releases に `.plugin` を添付）。
-- 版上げは `.claude-plugin/plugin.json` と `marketplace.json` の `version` を揃えて更新し、`git tag vX.Y.Z && git push origin vX.Y.Z`。Release ワークフローが検証→ビルド→Release 作成を行う。
+- 版上げは `.claude-plugin/plugin.json` と `marketplace.json` の `version` を揃え、CHANGELOG.md の `[Unreleased]` を `[X.Y.Z] - 日付` に切ってから `git tag vX.Y.Z && git push origin vX.Y.Z`。Release ワークフローが `verify.sh --release`（タグ・version・CHANGELOG の整合）→ `.plugin` ビルド → CHANGELOG の該当節を本文にした Release 作成を行う。
+- ローカル検証は `bash scripts/verify.sh`（CI と同じ内容。`/SEO検証` もこれを呼ぶ）。

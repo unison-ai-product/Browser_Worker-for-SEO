@@ -16,18 +16,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Tag matches plugin.json version
-        run: |
-          v=$(python -c "import json; print(json.load(open('.claude-plugin/plugin.json', encoding='utf-8'))['version'])")
-          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != plugin.json v$v"; exit 1; }
-          m=$(python -c "import json; print(json.load(open('.claude-plugin/marketplace.json', encoding='utf-8'))['plugins'][0]['version'])")
-          [ "$m" = "$v" ] || { echo "marketplace.json version $m != $v"; exit 1; }
-
-      - name: Validate (same as CI)
-        run: |
-          python -m py_compile scripts/seo-db.py scripts/wp-draft.py scripts/keyword-gate.py
-          bash scripts/test-hooks.sh
-          python scripts/keyword-gate.py --selftest
+      - name: verify.sh --release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: bash scripts/verify.sh --release
 
       - name: Build .plugin
         run: |
@@ -43,10 +35,17 @@ jobs:
           print(out, out.stat().st_size)
           PY
 
+      - name: Release notes from CHANGELOG
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '/^## \[/{p = ($0 ~ "^## \\[" v "\\]")} p' CHANGELOG.md | tail -n +2 > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md" > notes.md
+          cat notes.md
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" seo-content-worker-*.plugin \
             --title "seo-content-worker ${GITHUB_REF_NAME}" \
-            --generate-notes
+            --notes-file notes.md

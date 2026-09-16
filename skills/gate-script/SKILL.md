@@ -52,6 +52,8 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py \
   --json memory/work/<kw>/gate_result.json
 ```
 終了コード 0 = PASS（警告のみ可）、1 = FAIL、2 = 入力不備。結果 JSON を keyword-gate エージェントに渡す。
+`--keyword "<施策キーワード>"` を必ず渡す（タイトル判定は施策キーワードの全トークンの有無で行う）。
+**outline.md / article.md には記事の骨組み・本文だけを書く**（`#` タイトル、`##` H2、`###` H3）。ファンアウト表・内部リンク一覧・方針などの補助情報は `outline_notes.md` に分ける（同じファイルに書くと H2 数に数えられる — 2026-09-16 実測）。
 
 ## 4. 修正ループ
 

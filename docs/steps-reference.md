@@ -38,7 +38,7 @@
 | `active` / `phase` / `b4_done` / `e_done` | seo-start 手順1〜3 | Workflow Gate |
 | `stage` | 各ステージ開始時 | （報告用） |
 | `gate_pass` | seo-write 手順6（ルール＆レギュレーションゲート PASS） | Publish Guard |
-| `psv_done` | seo-write 手順7（監査 + 承認） | Workflow Gate（bulk_send 相当） |
+| `psv_done` | seo-write 手順7（pre-publish-verifier VERDICT: GO） | Workflow Gate（stage=write の変更操作）/ Publish Guard（wp-draft.py） |
 | `ov_done` | seo-write 手順9 / 投稿なしは NO_POST | Flag Guard の文言・締めの前提 |
 | `k_done` | seo-start 手順7 | Drop Guard / SessionStart |
 

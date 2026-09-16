@@ -48,8 +48,9 @@ quote_source:
 forbidden: []                      # 禁止表現（既定は空。media-rules の差分で追加。正規表現可）
 
 structure:
-  h2_min: null                     # 上位記事中央値から手順書が渡す（null = 判定しない）
+  h2_min: null                     # 直接指定する場合のみ（通常は --h2-median から算出）
   h2_max: null
+  h2_tolerance: 2                  # --h2-median ± この値を H2 数の許容範囲にする
   h3_without_h2: fail
 
 links:

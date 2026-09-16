@@ -24,8 +24,7 @@ fi
 # フラグを消すのは各復帰手順の仕事で、この hook は消さない（通知のみ）。
 STALE=""
 [ -f "$WF_DIR/money_alert" ] && STALE="${STALE}money_alert（変更操作が全て停止中／復帰は docs/steps/money-recovery.md）, "
-[ -f "$WF_DIR/verify_allowlist" ] && STALE="${STALE}verify_allowlist（検証モード＝許可サイト以外へ navigate 不可。検証タスク中でなければ残留です）, "
-[ -f "$WF_DIR/bulk_send" ] && [ ! -f "$WF_DIR/ov_done" ] && STALE="${STALE}bulk_send（公開後のブラウザ確認（ov_done）なしでタスク完了が不可）, "
+[ "$(cat "$WF_DIR/stage" 2>/dev/null)" = "write" ] && [ ! -f "$WF_DIR/ov_done" ] && STALE="${STALE}stage=write（WP 下書きのブラウザ確認（ov_done）なしでタスク完了が不可）, "
 if [ -n "$STALE" ]; then
   PREFIX="${PREFIX}【残留フラグ】memory/.workflow/ に前セッションの停止系フラグが残っています: ${STALE%, }。操作がブロックされたら原因はこれです。**勝手に rm して解除しないこと** — 各フラグの正規の復帰手順に従うか、残留だと判断できる場合はユーザーに1行で伝えて指示を仰ぐ。全体像は /SEO検証 で一覧できます。 "
 fi

@@ -12,7 +12,7 @@ source "$SCRIPT_DIR/_common.sh"
 IS_INPUT_OP=0
 # browser_network_request（任意 HTTP 送信）: method が明示の GET/HEAD で body 系キーが無いものだけ読み取りと見なす。
 # method 省略（既定 GET）は判定不能としてゲートを通す（省略で抜けられる穴を作らない）。GET でも状態変更する API
-# （?action=unsubscribe 等）は残存リスク — url-guard と Money Watch が別途止める（2026-09-10 PR #9）。
+# （?action=unsubscribe 等）は残存リスク — Money Watch が別途止める（URL ガードは本プラグインには無い）。
 NR_READONLY=0
 if printf '%s' "$STDIN_JSON" | grep -q 'browser_network_request'; then
   if printf '%s' "$STDIN_JSON" | grep -qE '"method"[[:space:]]*:[[:space:]]*"(GET|HEAD|get|head)"' && \
@@ -93,11 +93,20 @@ if [ ! -f "$WF_DIR/b4_done" ] || [ -z "$PHASE_VAL" ]; then
     "【SEO Worker Gate】B-4未完了（b4_done または phase が空）。手順: procedures/seo-start.md"
 fi
 
-# 一括送出タスク（Step F で bulk_send 宣言）は pre-publish-verifier 監査完了（psv_done）まで変更操作を止める
-if [ -f "$WF_DIR/bulk_send" ] && [ ! -f "$WF_DIR/psv_done" ]; then
+# Publish Click Guard: WordPress の「公開」「予約投稿」「更新（公開済み記事の上書き）」に相当する操作はフラグの有無に関係なく常時拒否。
+# 判定できるのは tool_input に文字列がある操作（ref の要素名・element 説明・入力テキスト・JS）だけ。座標クリックは文字列を持たないので
+# ここでは止まらない — 手順書（seo-write 手順8）の「押すのは下書き保存のみ」と pre-publish-verifier が残りを担う（既知の限界）。
+if printf '%s' "$STDIN_TEXT" | grep -qiE '"(公開|公開する|今すぐ公開|予約投稿|予約|更新|Publish|Schedule|Update)"|(button|ボタン)[^"]{0,20}(公開|Publish|Schedule)|(公開|Publish|Schedule)[^"]{0,20}(button|ボタン)|post_status[^a-z_]{0,3}(=|:)[[:space:]"]*(publish|future|private)|wp_publish_post|"status"[[:space:]]*:[[:space:]]*"(publish|future|private)"'; then
+  deny "【Publish Guard】WordPress の「公開」「予約投稿」「更新」に相当する操作は AI には許可されていません。このプラグインが押してよいのは「下書き保存」だけです。公開はユーザー本人が WP 管理画面で行ってください。"
+fi
+
+# ④ 記事作成（stage=write）の間は pre-publish-verifier 監査完了（psv_done）までブラウザの変更操作を止める
+# （WP 管理画面への貼り付け・下書き保存は監査後。図解の PNG 化は navigate + screenshot だけなのでここには来ない）
+STAGE_VAL="$(cat "$WF_DIR/stage" 2>/dev/null | tr -d '[:space:]')"
+if [ "$STAGE_VAL" = "write" ] && [ ! -f "$WF_DIR/psv_done" ]; then
   deny_decay psv \
-    "【SEO Worker Gate】公開・投稿を含むタスクは pre-publish-verifier の敵対的監査（VERDICT）とユーザー承認が先です。監査完了後に psv_done を立ててから実行してください（手順の正本: docs/steps/review.md）。フラグだけ立てる迂回は禁止です。" \
-    "【SEO Worker Gate】psv_done 未了（pre-publish-verifier 監査が先）。手順: docs/steps/review.md"
+    "【SEO Worker Gate】④ 記事作成では WP への投稿の前に pre-publish-verifier の敵対的監査（VERDICT: GO）が必要です。監査完了後に touch memory/.workflow/psv_done してからブラウザの変更操作を行ってください（手順の正本: procedures/seo-write.md 手順7）。フラグだけ立てる迂回は禁止です。" \
+    "【SEO Worker Gate】psv_done 未了（pre-publish-verifier 監査が先）。手順: procedures/seo-write.md 手順7"
 fi
 
 if [ ! -f "$WF_DIR/e_done" ]; then

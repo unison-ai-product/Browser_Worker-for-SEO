@@ -178,7 +178,7 @@ money_suppressed() {
 # 保つため、全文で当たったパターンだけ行単位で再確認する（アンカーを含まないパターンでは全文一致が行一致の
 # 上位集合なので前段フィルタになる。^ / $ を含むパターンはフィルタせず行単位のみ）。不正な正規表現は grep 版と
 # 同じく「不一致」扱いだが、気付けるよう stderr に1回だけ警告する。
-# url-guard と Money Watch の両方がこれを使う（ワークスペース側リストとの2層構造も同じ関数で扱う）。
+# Money Watch がこれを使う（ワークスペース側リストとの2層構造も同じ関数で扱う）。
 list_match() {
   local text="$1" LIST pat line hit rc; shift
   local had_nc=0; shopt -q nocasematch && had_nc=1; shopt -s nocasematch

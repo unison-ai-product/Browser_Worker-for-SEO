@@ -9,7 +9,20 @@
 - `scripts/verify.sh` — CI / Release / `/SEO検証` が共通で呼ぶ検証コマンド（manifests・構造・スクリプト・hooks・DB・WP 拒否・リリース整合）
 - CHANGELOG.md
 
+### Fixed（外部監査 2026-09-16）
+- Publish Guard: `wp eval` / `wp db query` / `wp post update --post_status` 経由の公開も拒否。wp-draft.py の投稿に psv_done（送信前監査 GO）の証跡を要求（`--check` は免除）
+- Workflow Gate: ブラウザ操作の「公開 / 予約投稿 / 更新 / Publish / Schedule」を常時拒否（文字列を持つ操作のみ。座標クリックは既知の限界）。stage=write の間は psv_done まで変更操作を止める（旧 bulk_send 条件を置換）
+- keyword-gate.py: `--required` のファイルが無ければ exit 2（黙って PASS しない）、未指定は警告。`--h2-median` で H2 数を中央値 ± h2_tolerance で判定。コードブロック内の `## ` を見出しに数えない。表・画像行を文長判定から除外。selftest に `--keyword` / fence / h2-median の検査を追加
+- seo-analysis 手順8: required_keywords.txt と h2_median.txt の書き出しを明記。seo-write 手順6 にも `--keyword` `--h2-median` を追加、`--media` は 1 枚ずつ
+- seo-db.py knowledge search: 部分一致フォールバックを title / meta_description / body / tags に拡張（2 文字語が 0 件になる問題）
+- wp-draft.py: `https://` 以外のサイトを拒否
+- docs/steps/review.md・money-recovery.md・speed.md を本プラグインの手順に書き直し（旧プラグインの pre-send-verifier / bulk-send / strategy-advisor 参照を除去）。_common.sh / session-start.sh の url-guard・verify_allowlist 参照を除去。ga4-analysis の他プラグイン名を除去
+- seo-write 手順3: 図解は HTML → ローカル HTTP 配信 → スクリーンショット PNG（file:// は不可）
+
 ### Changed
+- keyword-gate.py: `--keyword` でタイトル判定を施策キーワードのトークンで行う。rules が未配置なら templates/gate_rules.yaml に fallback（警告付き）、入力欠落は traceback ではなく exit 2
+- seo-outline / gate-script: outline.md は骨組みだけ、補助情報は outline_notes.md に分離（H2 数の誤カウント防止）
+- seo-analysis: 記事 URL は serps.json の href を使う。meta / JSON-LD は WebFetch では取れないので read_page で取る
 - seo-serps: 実機試験の知見を反映（検索はボタン押下、AIO は read_page で取得、Search Console Insights を personalized の証拠に）
 
 ## [0.1.0] - 2026-09-16

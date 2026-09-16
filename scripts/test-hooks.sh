@@ -39,13 +39,40 @@ check "Publish Guard: status=publish は deny" 'Publish Guard' "$got"
 rm -f "$DELVEWORK_WF_DIR/gate_pass"
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --title t --content a.html --status draft"}}' | bash "$SC/publish-guard.sh")
 check "Gate Guard: gate_pass 無しは deny" 'Gate Guard' "$got"
-# 5. Publish Guard: gate_pass ありの draft は通す
-echo PASS > "$DELVEWORK_WF_DIR/gate_pass"
+# 5. Publish Guard: gate_pass + psv_done ありの draft は通す
+echo PASS > "$DELVEWORK_WF_DIR/gate_pass"; touch "$DELVEWORK_WF_DIR/psv_done"
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --title t --content a.html --status draft"}}' | bash "$SC/publish-guard.sh")
 check "Gate Guard: gate_pass ありは通す" 'EMPTY' "$got"
 # 6. Publish Guard: 無関係な Bash は通す
 got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' | bash "$SC/publish-guard.sh")
 check "Publish Guard: 無関係コマンドは通す" 'EMPTY' "$got"
+# 6a. Publish Guard: wp eval / wp db query 経由の公開も deny
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"wp eval \"wp_publish_post(123);\""}}' | bash "$SC/publish-guard.sh")
+check "Publish Guard: wp eval wp_publish_post は deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"wp db query \"UPDATE wp_posts SET post_status=publish WHERE ID=1\""}}' | bash "$SC/publish-guard.sh")
+check "Publish Guard: wp db query post_status=publish は deny" 'Publish Guard' "$got"
+# 6b. PSV Guard: psv_done 無しの draft 投稿は deny（gate_pass あり）
+rm -f "$DELVEWORK_WF_DIR/psv_done"; echo PASS > "$DELVEWORK_WF_DIR/gate_pass"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --title t --content a.html --status draft"}}' | bash "$SC/publish-guard.sh")
+check "PSV Guard: psv_done 無しは deny" 'PSV Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"python3 scripts/wp-draft.py --site https://x --check"}}' | bash "$SC/publish-guard.sh")
+check "PSV Guard: --check は通す" 'EMPTY' "$got"
+touch "$DELVEWORK_WF_DIR/psv_done"
+# 6c. Workflow Gate: ブラウザの「公開」クリックは常時 deny / stage=write は psv_done まで deny
+wf_ready
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_12","element":"公開 button"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Click Guard: 公開ボタンは deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__playwright__browser_click","tool_input":{"element":"Publish button","ref":"e12"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Click Guard: Publish button は deny" 'Publish Guard' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_13","element":"下書き保存 button"}}' | bash "$SC/workflow-gate.sh")
+check "Publish Click Guard: 下書き保存は通す" 'EMPTY' "$got"
+echo write > "$DELVEWORK_WF_DIR/stage"; rm -f "$DELVEWORK_WF_DIR/psv_done"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_13","element":"下書き保存 button"}}' | bash "$SC/workflow-gate.sh")
+check "Workflow Gate: stage=write は psv_done まで deny" 'psv_done' "$got"
+touch "$DELVEWORK_WF_DIR/psv_done"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","ref":"ref_13","element":"下書き保存 button"}}' | bash "$SC/workflow-gate.sh")
+check "Workflow Gate: stage=write + psv_done は通す" 'EMPTY' "$got"
+rm -f "$DELVEWORK_WF_DIR/stage" "$DELVEWORK_WF_DIR/psv_done"
 # 7. Subagent Guard: 配役外は deny
 got=$(printf '%s' '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose","prompt":"x"}}' | bash "$SC/subagent-guard.sh")
 check "Subagent Guard: 配役外は deny" 'Subagent Guard' "$got"

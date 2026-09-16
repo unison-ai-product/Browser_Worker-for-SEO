@@ -50,6 +50,8 @@ def main():
     ap.add_argument("--media"); ap.add_argument("--alt", default="")
     a = ap.parse_args()
 
+    if not a.site.lower().startswith("https://"):
+        print(json.dumps({"ok": False, "error": "site は https:// のみ（アプリケーションパスワードを平文で送らない）"}, ensure_ascii=False)); sys.exit(1)
     if a.status not in ("draft", "pending"):
         print(json.dumps({"ok": False, "error": f"status={a.status} は許可されていません（draft / pending のみ）。公開は人間が WP 管理画面で行います。"}, ensure_ascii=False)); sys.exit(1)
 

@@ -125,9 +125,10 @@ def cmd_knowledge_search(a):
         sql += " AND k.kind = ?"; params.append(a.kind)
     sql += " ORDER BY score LIMIT ?"; params.append(a.limit)
     rows = [dict(r) for r in c.execute(sql, params)]
-    if not rows:  # theme の部分一致にフォールバック
-        sql2 = "SELECT id, kind, theme, stance, title, meta_description, dated, source_file FROM knowledge_items WHERE theme LIKE ?"
-        p2 = [f"%{q}%"]
+    if not rows:  # 部分一致にフォールバック（trigram FTS は 3 文字未満の語を拾えない）
+        sql2 = ("SELECT id, kind, theme, stance, title, meta_description, dated, source_file FROM knowledge_items "
+                "WHERE (theme LIKE ? OR title LIKE ? OR meta_description LIKE ? OR body LIKE ? OR tags LIKE ?)")
+        p2 = [f"%{q}%"] * 5
         if a.kind:
             sql2 += " AND kind = ?"; p2.append(a.kind)
         rows = [dict(r) for r in c.execute(sql2 + " LIMIT ?", p2 + [a.limit])]

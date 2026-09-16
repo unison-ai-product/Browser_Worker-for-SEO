@@ -10,17 +10,32 @@ source "$SCRIPT_DIR/_common.sh"
 CMD="$(printf '%s' "$STDIN_TEXT" | sed -n 's/.*"command":"\(.*\)".*/\1/p' | head -c 20000)"
 [ -n "$CMD" ] || CMD="$STDIN_TEXT"
 
+# (a0) WP-CLI / PHP / SQL 経由の公開は書き方を問わず拒否（wp post update --post_status / wp eval wp_publish_post / wp db query UPDATE ... post_status）
+if printf '%s' "$CMD" | grep -qiE 'wp_publish_post|wp_update_post|post_status|wp[ ]+(eval|eval-file|db[ ]+query|post[ ]+(publish|update))'; then
+  if printf '%s' "$CMD" | grep -qiE 'publish|future|private'; then
+    deny "【Publish Guard】WP-CLI / PHP / SQL を経由した公開ステータスの変更（wp eval / wp db query / wp post update --post_status=publish 等）は AI には許可されていません。公開はユーザー本人が WP 管理画面で行ってください。"
+  fi
+fi
+
 # WP 投稿を伴うコマンドか（wp-draft.py / wp-json/wp/v2/posts への POST・PUT / wp post create）
 if printf '%s' "$CMD" | grep -qiE 'wp-draft\.py|wp-json/wp/v2/(posts|pages)|wp[ ]+post[ ]+(create|update)'; then
   # (a) 公開ステータスの機械拒否
-  if printf '%s' "$CMD" | grep -qiE -- '--status[= ]+(publish|future|private)|"status" *: *"(publish|future|private)"|status=(publish|future|private)|--publish|post_status=(publish|future)'; then
+  if printf '%s' "$CMD" | grep -qiE -- '--status[= ]+(publish|future|private)|"status" *: *"(publish|future|private)"|status=(publish|future|private)|--publish|post_status=(publish|future|private)'; then
     deny "【Publish Guard】WordPress への公開（status=publish/future/private）は AI には許可されていません。このプラグインが投稿できるのは下書き（draft）のみです。公開はユーザー本人が WP 管理画面で行ってください。"
   fi
+  # --check（接続確認）は投稿ではないので以下の証跡検査を免除
+  if printf '%s' "$CMD" | grep -qE -- '--check'; then exit 0; fi
   # (b) ゲート通過証跡
   if [ ! -f "$WF_DIR/gate_pass" ]; then
     gate_emit gate "Gate Guard" \
       "【Gate Guard】ルール＆レギュレーションゲート（keyword-gate + fact-checker + fix-integrator の PASS）を通過した証跡 memory/.workflow/gate_pass がありません。procedures/seo-write.md 手順6 のゲートを通し、PASS を echo で記録してから WP に投稿してください。証跡だけ作って迂回することは禁止です。" \
       "【Gate Guard】gate_pass なし。手順: procedures/seo-write.md 手順6"
+  fi
+  # (c) 送信前監査の証跡（pre-publish-verifier の VERDICT GO → psv_done）
+  if [ ! -f "$WF_DIR/psv_done" ]; then
+    gate_emit psv "PSV Guard" \
+      "【PSV Guard】pre-publish-verifier の送信前監査（VERDICT: GO）の証跡 memory/.workflow/psv_done がありません。procedures/seo-write.md 手順7 の監査を通してから WP に投稿してください。フラグだけ立てる迂回は禁止です。" \
+      "【PSV Guard】psv_done なし。手順: procedures/seo-write.md 手順7"
   fi
 fi
 exit 0

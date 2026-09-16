@@ -64,8 +64,10 @@ def _mini_yaml(txt):
 def parse_md(text):
     lines = text.splitlines()
     title, h2, h3, lead, body = None, [], [], [], []
-    seen_h2 = False; order = []
+    seen_h2 = False; order = []; in_fence = False
     for ln in lines:
+        if ln.lstrip().startswith("```"): in_fence = not in_fence; (body if seen_h2 else lead).append(ln); continue
+        if in_fence: (body if seen_h2 else lead).append(ln); continue
         if ln.startswith("# ") and title is None: title = ln[2:].strip(); continue
         if ln.startswith("## "): h2.append(ln[3:].strip()); order.append("h2"); seen_h2 = True; continue
         if ln.startswith("### "): h3.append(ln[4:].strip()); order.append("h3"); continue
@@ -76,11 +78,19 @@ def parse_md(text):
 def split_sentences(text):
     text = re.sub(r"```.*?```", "", text, flags=re.S)
     text = re.sub(r"^#+ .*$", "", text, flags=re.M)
+    text = re.sub(r"^\s*(\|.*|!\[.*)$", "", text, flags=re.M)  # 表の行・画像行は文として数えない
     return [s.strip() for s in re.split(r"(?<=[。！？!?])\s*", text) if s.strip()]
 
 
-def run(doc, required, rules, kind, title_override=None, meta=None):
+def run(doc, required, rules, kind, title_override=None, meta=None, keyword=None, h2_median=None):
     fails, warns, info = [], [], {}
+    if h2_median:
+        tol = int((rules.get("structure") or {}).get("h2_tolerance") or 2)
+        rules = dict(rules); st0 = dict(rules.get("structure") or {})
+        st0["h2_min"] = max(1, int(h2_median) - tol); st0["h2_max"] = int(h2_median) + tol; rules["structure"] = st0
+        info["h2_range"] = [st0["h2_min"], st0["h2_max"]]
+    if not required:
+        warns.append("必須キーワードが未指定です（--required memory/work/<kw>/required_keywords.txt を渡してください）")
     title = title_override or doc["title"]
     heads = " ".join([title] + doc["h2"] + doc["h3"])
     lead = doc["lead"]
@@ -98,8 +108,12 @@ def run(doc, required, rules, kind, title_override=None, meta=None):
         n = len(title); info["title_len"] = n
         if t.get("fail_over") and n > t["fail_over"]: fails.append(f"タイトル {n} 字 > {t['fail_over']}")
         elif t.get("warn_over") and n > t["warn_over"]: warns.append(f"タイトル {n} 字 > {t['warn_over']}（警告）")
-        if t.get("must_include_keyword") and required and not any(kw in title for kw, m in required if m):
-            fails.append("タイトルに必須キーワードが含まれていません")
+        if t.get("must_include_keyword"):
+            if keyword:  # 施策キーワードの全トークンがタイトルにあるか
+                missing = [tok for tok in keyword.split() if tok not in title]
+                if missing: fails.append(f"タイトルに施策キーワードの語が含まれていません: {missing}")
+            elif required and not any(kw in title for kw, m in required if m):
+                fails.append("タイトルに必須キーワードが含まれていません")
     else:
         fails.append("タイトル（# 見出し）がありません")
     # meta
@@ -172,7 +186,13 @@ def selftest():
     exp = ["全角英数字", "表記ゆれ", "二重", "同一語尾", "出典の無い引用", "プレースホルダ", "リンク"]
     missing = [e for e in exp if not any(e in f for f in r["fails"])]
     good = "# Webライターの始め方\n\nリード文です。Webライターの概要を書きます。\n\n## Webライターとは\nWebライターは文章を書く仕事です。理由は次のとおりです。例えば記事を書きます。[参考](https://example.jp/a)\n"
-    r2 = run(parse_md(good), [("Webライター", True)], rules, "article")
+    r2 = run(parse_md(good), [("Webライター", True)], rules, "article", keyword="Webライター 始め方")
+    r3 = run(parse_md(good), [("Webライター", True)], rules, "article", keyword="Webライター 副業")
+    if not any("副業" in f for f in r3["fails"]): missing.append("施策キーワードのトークン欠落（--keyword）")
+    fenced = "# Webライターの始め方" + chr(10)*2 + "リード文です。" + chr(10)*2 + "## Webライターとは" + chr(10) + "本文です。[参考](https://example.jp/a)" + chr(10)*2 + "```" + chr(10) + "## コード内の見出し" + chr(10) + "```" + chr(10)
+    if len(parse_md(fenced)["h2"]) != 1: missing.append("コードブロック内の ## を除外")
+    r4 = run(parse_md(good), [("Webライター", True)], rules, "article", h2_median=6)
+    if not any("H2 1 <" in f for f in r4["fails"]): missing.append("--h2-median による H2 数の範囲判定")
     ok = not missing and r2["result"] == "PASS"
     print(json.dumps({"selftest": "PASS" if ok else "FAIL", "missing_detections": missing, "good_doc": r2}, ensure_ascii=False, indent=2))
     sys.exit(0 if ok else 1)
@@ -181,21 +201,35 @@ def selftest():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--outline"); ap.add_argument("--article"); ap.add_argument("--required"); ap.add_argument("--rules")
-    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--json"); ap.add_argument("--title"); ap.add_argument("--meta"); ap.add_argument("--keyword", help="施策キーワード（タイトル判定）"); ap.add_argument("--h2-median", type=int, help="上位記事の H2 数の中央値（±structure.h2_tolerance で判定）"); ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest: selftest()
     src = a.article or a.outline
     if not (src and a.rules):
         print(json.dumps({"result": "ERROR", "error": "--outline/--article と --rules が必要です"}, ensure_ascii=False)); sys.exit(2)
     required = []
-    if a.required and pathlib.Path(a.required).exists():
+    if a.required and not pathlib.Path(a.required).exists():
+        print(json.dumps({"result": "ERROR", "error": f"必須キーワードのファイルが見つかりません: {a.required}（② 記事分析の手順8 で書き出します）"}, ensure_ascii=False)); sys.exit(2)
+    if a.required:
         for ln in pathlib.Path(a.required).read_text(encoding="utf-8").splitlines():
             ln = ln.strip()
             if not ln or ln.startswith("#"): continue
             if ln.startswith("-"): required.append((ln[1:].strip(), False))
             else: required.append((ln.lstrip("+").strip(), True))
+    rules_path = pathlib.Path(a.rules)
+    note = None
+    if not rules_path.exists():
+        fallback = pathlib.Path(__file__).resolve().parent.parent / "templates" / "gate_rules.yaml"
+        if fallback.exists():
+            note = f"rules {a.rules} が無いため templates/gate_rules.yaml を使用（/SEO設定 で knowledge/rules に配置してください）"
+            rules_path = fallback
+        else:
+            print(json.dumps({"result": "ERROR", "error": f"rules が見つかりません: {a.rules}"}, ensure_ascii=False)); sys.exit(2)
+    if not pathlib.Path(src).exists():
+        print(json.dumps({"result": "ERROR", "error": f"入力が見つかりません: {src}"}, ensure_ascii=False)); sys.exit(2)
     doc = parse_md(pathlib.Path(src).read_text(encoding="utf-8"))
-    res = run(doc, required, load_yaml(a.rules), "article" if a.article else "outline", a.title, a.meta)
+    res = run(doc, required, load_yaml(rules_path), "article" if a.article else "outline", a.title, a.meta, a.keyword, a.h2_median)
+    if note: res.setdefault("warns", []).append(note)
     res["source"] = src
     txt = json.dumps(res, ensure_ascii=False, indent=2)
     if a.json: pathlib.Path(a.json).write_text(txt, encoding="utf-8")

@@ -19,7 +19,7 @@ color: magenta
 
 ## 入力（絶対パス）
 - memory/work/<kw>/units/U1〜U3.draft.md と U*.facts.md
-- memory/work/<kw>/figures/*.svg と *.md（alt / caption / 挿入位置）
+- memory/work/<kw>/figures/*.png と *.md（alt / caption / 出典 / 挿入位置）
 - memory/work/<kw>/outline.md（承認済み構成案。見出しはこれが正）
 - knowledge/rules/media-rules.md、gate_rules.yaml、skills/seo-writing/SKILL.md
 - 修正ループ時: keyword-gate の判定表と keyword-gate.py の JSON

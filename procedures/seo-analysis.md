@@ -11,17 +11,17 @@ argument-hint: <検索キーワード>
 
 ## 手順（記事ごと — article-analyzer が実行）
 
-1. WebFetch で記事を取得（403/JS 描画で本文が取れなければ Claude in Chrome で開いて get_page_text。閲覧のみ）。
+1. WebFetch で記事を取得（403/JS 描画で本文が取れなければ Claude in Chrome で開いて get_page_text。閲覧のみ）。URL は ① の `serps.json` に保存した href を使う（SERP のタイトルから再検索して探さない。見つからないときは Bing の `site:` 検索かサイト内の記事一覧で特定。DuckDuckGo の html 版は CAPTCHA が出る — 2026-09-16 実測）。
 2. タイトル / H1 / H2〜H4 の階層 / meta description / 公開日・更新日 / 著者表記 / 文字数（概算）を抽出。
 3. **見出し配下の内部リンク**: 各 H2 セクション内のリンクのうち同一ドメインのものを「見出し → リンク先タイトル・URL」の形で列挙（遷移マップ）。外部リンクは件数のみ。
 4. **主義・主張の分類**: 記事の中心主張を 3 つまで抜き出し、キーワードに対する世論（AIO と上位記事の多数派）を基準に `reinforce`（世論強化）/ `oppose`（世論反対）/ `neutral`（中立）で分類。切り抜きは**原文 60 字以内の引用 + 出典 URL**。
 5. **AIO 引用箇所の特定**: AIO の引用 URL がこの記事なら、AIO 本文の各文と記事本文を突き合わせ、引用元と思われる段落（見出し名・冒頭 40 字）を特定。AIO がどう言い換えたか（原文 → AIO 文）を並記。
-6. **構造化データと LLM 閲覧テキスト**: `<script type="application/ld+json">` の @type（Article / FAQPage / BreadcrumbList / HowTo 等）と主要フィールド、`<title>`・OGP、そして本文をプレーンテキスト化した先頭 300 字（LLM が読む形）を記録。
+6. **構造化データと LLM 閲覧テキスト**（WebFetch は要約済みテキストしか返さず `<meta>` と JSON-LD は取れない。Claude in Chrome の read_page か javascript_tool で `document.head` を読む — 2026-09-16 実測）: `<script type="application/ld+json">` の @type（Article / FAQPage / BreadcrumbList / HowTo 等）と主要フィールド、`<title>`・OGP、そして本文をプレーンテキスト化した先頭 300 字（LLM が読む形）を記録。
 7. 結果を `memory/work/<kw>/analysis_<順位>.md` に書いて返す。
 
 ## 手順（統合 — メインループ）
 
-8. 5本の見出しをマージし、キーワードマップの子KW・SERP の共起語と照合して**共通キーワード**（3本以上の見出しに出る語 = 必須、2本 = 推奨）を確定。`keyword-gate`（Haiku）に照合の検算を委譲してよい。
+8. 5本の見出しをマージし、キーワードマップの子KW・SERP の共起語と照合して**共通キーワード**（3本以上の見出しに出る語 = 必須、2本 = 推奨）を確定。`keyword-gate`（Haiku）に照合の検算を委譲してよい。確定したら **`memory/work/<kw>/required_keywords.txt`** に 1 行 1 語で書き出す（必須は `+語`、推奨は `-語`。③④ のゲートがこれを読む。無いとゲートは exit 2 で止まる）。あわせて上位5記事の H2 数の中央値を `memory/work/<kw>/h2_median.txt` に数字だけで書く（ゲートの `--h2-median` に渡す）。
 9. **差別化要素**: 他社が書いていない・主張が割れている論点を列挙し、自社が取れる立場（`knowledge/memory/original.md` のユーザーオリジナルメモリと突き合わせ）を仮置き。
 10. **推移マップの照合**: SERP 上の導線（AIO → PAA → 上位記事）と、記事内の導線（見出し → 内部リンク）を並べ、検索者が「どの問いから入り、どこへ抜けるか」を 5 行以内で要約。
 11. 記録: スプレッドシート `記事分析` シートに記事ごとに 1 行（+ 統合行 1 行）、seo.db `article_analyses` に追記、`memory/work/<kw>/analysis.md` に統合結果。

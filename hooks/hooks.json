@@ -68,7 +68,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "mcp__claude-in-chrome__read_page|mcp__claude-in-chrome__find|mcp__claude-in-chrome__get_page_text|mcp__claude-in-chrome__javascript_tool|mcp__claude-in-chrome__browser_batch|mcp__playwright__browser_snapshot|mcp__playwright__browser_evaluate|mcp__playwright__browser_find|WebFetch",
+        "matcher": "mcp__claude-in-chrome__read_page|mcp__claude-in-chrome__find|mcp__claude-in-chrome__get_page_text|mcp__claude-in-chrome__javascript_tool|mcp__claude-in-chrome__browser_batch|mcp__playwright__browser_snapshot|mcp__playwright__browser_evaluate|mcp__playwright__browser_find|WebFetch|Read",
         "hooks": [
           {
             "type": "command",

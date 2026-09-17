@@ -14,6 +14,8 @@ SEO Worker のタスク「$ARGUMENTS」を開始する。手順の正本は `doc
    - 使えるブラウザ系統を確認する: `mcp__claude-in-chrome__*` が第一、無ければ `mcp__playwright__*`。両方無ければ ToolSearch で再検索してから判断。
    - Google スプレッドシート連携（Drive の MCP ツール）と `python3`・`sqlite3` の有無を確認し、`knowledge/config/config.yaml` の `sheet_id` / `wp.site_url` / `own_domain` が埋まっているか見る。埋まっていない項目は**未設定モード**として続行する（推測で埋めない。挙動の違いは procedures/seo-article.md §4 の表。完了報告に「未設定: sheet_id / own_domain / wp」のように列挙し、/SEO設定 を案内する）。
 
+0.7. 保存先を確認する: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/setup-status.py` の `folder` が `todo`（一時領域）なら、AskUserQuestion で 1 回だけ「保存先フォルダを接続する（procedures/seo-setup.md の folder）/ 保存せずに続ける」を聞く。保存せずに続ける場合は完了報告に「保存先なし」を 1 行入れ、成果物をファイルで渡す。`done` なら何も聞かない。`db` が `todo` なら `seo-db.py init` を黙って実行する（質問しない）。
+
 1. 作業場とフラグを初期化する:
    ```bash
    mkdir -p memory/.workflow memory/work knowledge/logs knowledge/data knowledge/feedback knowledge/rules knowledge/config

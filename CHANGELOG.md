@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+### Changed
+- `/SEO設定` を初回設定の一本道に整理（folder → db → profile → sheet → wp → rules/memory）。済んだ段は飛ばして続きから再開、必須は folder と db だけ。`folder`（保存先フォルダの確認・作成）を新設
+- `scripts/setup-status.py`: 設定の進み具合を JSON で返す（ウィザード・/SEO検証・開始手順が共通で使う。認証メモは名前の一致だけを見る）
+- 開始手順（seo-start）: 保存先が一時領域なら最初に 1 回だけ確認。DB 未初期化は黙って初期化
+
 ### Fixed
 - seo-verify 手順: `wp-draft.py --check` に `--site` が必須であることを明記（実機の /SEO検証 で判明）
 

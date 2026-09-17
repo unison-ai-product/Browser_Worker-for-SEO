@@ -8,7 +8,7 @@ argument-hint: [quick / full]
 ## 状態確認（常に）
 
 1. `memory/.workflow/` の `active` / `stage` / `phase` / 各フラグ（b4_done e_done gate_pass psv_done ov_done k_done money_alert）を `ls -la` で一覧し、意味を 1 行ずつ添えて報告。残留（active があり k_done なし）なら「引き継ぐか、ユーザーが中断と判断して `rm -f memory/.workflow/active` するか」を 1 問で聞く（AI が勝手に消さない）。
-2. `knowledge/config/config.yaml` の充足（sheet_id / wp.site_url / own_domain / wp.method）、`.env` の存在（中身は見ない）、`knowledge/data/seo.db` の有無とテーブル数（`seo-db.py stats`）。
+2. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/setup-status.py` を実行し、初回設定の進み具合（folder / db / profile / sheet / wp / rules の 6 段と `n/6`）を表で報告する。`folder` が `todo` なら「保存先フォルダ未接続: 設定と記憶はセッション終了で消える。`/SEO設定` で接続」を表の直後に 1 行で強調する。認証メモは存在だけ（中身は見ない。キー名の一覧も作らない）。`knowledge/data/seo.db` があればテーブルごとの件数（`seo-db.py stats`）。
 
 ## quick（既定）
 

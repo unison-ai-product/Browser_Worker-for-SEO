@@ -104,8 +104,11 @@ def insert(c, table, row, jsonify=()):
             row[k] = json.dumps(row[k], ensure_ascii=False)
     valid = [r[1] for r in c.execute(f"PRAGMA table_info({table})")]
     unknown = [k for k in row if k not in valid]
-    if unknown:
-        sys.stderr.write(json.dumps({"error": f"{table} に無い列: {unknown}", "columns": [v for v in valid if v not in ("id", "created_at")]}, ensure_ascii=False) + chr(10)); sys.exit(2)
+    if unknown:  # 未知の列は落として続行し、何を落としたかを stderr に出す（止めるとリトライの往復になる — 2026-09-17 実機）
+        sys.stderr.write(json.dumps({"warning": f"{table} に無い列を無視: {unknown}", "columns": [v for v in valid if v not in ("id", "created_at")]}, ensure_ascii=False) + chr(10))
+        row = {k: v for k, v in row.items() if k in valid}
+        if not [k for k in row if k != "id"]:
+            sys.stderr.write(json.dumps({"error": f"{table} に入れられる列が 1 つもありません"}, ensure_ascii=False) + chr(10)); sys.exit(2)
     cols = [k for k in row if k != "id"]
     sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})"
     cur = c.execute(sql, [row[k] for k in cols])

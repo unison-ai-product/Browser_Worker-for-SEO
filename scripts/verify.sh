@@ -34,7 +34,7 @@ check_status() { ! grep -l '未記入' skills/*/SKILL.md; }
 step "no skill is left as an empty skeleton (未記入)" check_status
 
 # 3. scripts
-step "python scripts compile" "$PY -m py_compile scripts/seo-db.py scripts/wp-draft.py scripts/keyword-gate.py scripts/setup-status.py"
+step "python scripts compile" "$PY -m py_compile scripts/seo-db.py scripts/wp-draft.py scripts/keyword-gate.py scripts/setup-status.py scripts/figures-png.py"
 step "hooks smoke test" "bash scripts/test-hooks.sh"
 step "keyword-gate selftest" "$PY scripts/keyword-gate.py --selftest"
 db_smoke() { local t; t=$(mktemp -d); SEO_DB="$t/seo.db" $PY scripts/seo-db.py init >/dev/null && printf '[{"kind":"claim","theme":"t","stance":"neutral","title":"x","meta_description":"ダミー知識","body":"b","dated":"2026-09"}]' > "$t/k.json" && SEO_DB="$t/seo.db" $PY scripts/seo-db.py knowledge add --json "$t/k.json" >/dev/null && SEO_DB="$t/seo.db" $PY scripts/seo-db.py knowledge search --q "ダミー" | grep -q '"id": 1'; local r=$?; rm -rf "$t"; return $r; }

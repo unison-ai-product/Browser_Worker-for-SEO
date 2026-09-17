@@ -20,7 +20,7 @@ tools: ["Read", "Write", "Edit"]
 
 ## ツール呼び出しの上限（厳守）
 
-- **9 回以内**（内訳の目安: Read（brief / style / 前ユニット / media-rules / スキル / original）6 + Write 1 + 見直しの Edit 2 まで）。
+- **10 回以内**（内訳の目安: Read（brief / style / 前ユニット / media-rules / スキル / original）6 + Write 1 + 見直しの Edit 2 まで）。
 - 入力は呼び出し側が絶対パスで渡す。**探さない**（Glob / ls / 手順書やスキルの読み直し / 関係ないファイルの Read をしない）。渡されていない物が必要なら、取りに行かず「不足: <何>」と書いて返す。
 - 上限に達したら、そこまでの結果と未完了の項目を返して終わる（続きは呼び出し側が判断する）。同じ操作のやり直しは 1 回まで。
 
@@ -29,6 +29,7 @@ tools: ["Read", "Write", "Edit"]
 - memory/work/<kw>/units/style.md（文体・一人称・読者の呼び方・用語の統一表・数値と出典の書き方）
 - 前ユニットの draft（U2, U3 のとき。文体・用語・話の受け渡しを合わせる）
 - knowledge/rules/media-rules.md、knowledge/memory/original.md、skills/seo-writing/SKILL.md（Read）
+- knowledge/rules/gate_rules.yaml（無ければプラグインの templates/gate_rules.yaml）— **書く前に読む**。同じ語尾は 2 回まで（3 連続で FAIL）・一文の長さ・禁止語・プレースホルダ禁止は、あとのゲートで機械判定される。書き終えたら自分の原稿を語尾の連続だけ見直す
 - 出力先 memory/work/<kw>/units/U<n>.draft.md
 
 ## 書き方

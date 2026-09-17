@@ -58,4 +58,4 @@ links:
   alt_required: true
 
 placeholders:
-  fail_if_present: ["[要出典", "{{figure", "[[link:", "[要人間判断]"]
+  fail_if_present: ["[要出典", "{{figure", "[[link:", "[要人間判断]"]   # 本文にプレースホルダを残さない。要出典・要人間判断は handover.md に書く（残っていても下書きまでは進む）

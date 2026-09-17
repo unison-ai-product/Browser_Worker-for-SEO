@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-17
+
 ### Changed
 - `/SEO設定` を初回設定の一本道に整理（folder → db → profile → sheet → wp → rules/memory）。済んだ段は飛ばして続きから再開、必須は folder と db だけ。`folder`（保存先フォルダの確認・作成）を新設
 - `scripts/setup-status.py`: 設定の進み具合を JSON で返す（ウィザード・/SEO検証・開始手順が共通で使う。認証メモは名前の一致だけを見る）
@@ -77,6 +79,7 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.1
 [0.2.0]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.0
 [0.1.0]: https://github.com/unison-ai-product/Browser_Worker-for-SEO/releases/tag/v0.1.0

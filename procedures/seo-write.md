@@ -10,12 +10,19 @@ argument-hint: <検索キーワード>
 
 ## 手順
 
-**目安 25 分**。速さは並列で稼ぐ（ゲート・ファクトチェック・送信前監査は省かない）。**手順2・3 は 1 メッセージにまとめて同時に起動する**（unit-drafter 3 体 + diagram-maker 最大 4 体）。返りを 1 体ずつ待って次を起動しない。
+**目安 25 分**。執筆は U1 → U2 → U3 の順次だが、**待ち時間を重ねて流す**（下の流し方）。ゲート・ファクトチェック・送信前監査は省かない。
+
+| 時点 | 同時に動かすもの（1 メッセージで起動） |
+|---|---|
+| 開始 | unit-drafter U1 + diagram-maker（H2 テーマごと・最大 4 体） |
+| U1 完了 | unit-drafter U2 + fact-checker U1 |
+| U2 完了 | unit-drafter U3 + fact-checker U2 |
+| U3 完了 | fact-checker U3（要修正があった unit の差し戻しもここで同時に） |
 
 1. **ユニット分割**: 構成案の H2 を文量で均等に 3 ユニット（U1: リード〜前半 H2 / U2: 中盤 H2 / U3: 後半 H2 + FAQ + まとめ）に割る。各ユニットの「前後の見出し・受け渡す用語・立場（reinforce/oppose/neutral）・必須キーワード・AIO 引用テーマ・内部リンク」を `memory/work/<kw>/units/U<n>.brief.md` に書く。
-2. **執筆**: unit-drafter（Sonnet, effort medium）を **U1・U2・U3 の 3 体同時**に起動する。文体・用語を揃えるために、手順1 で `units/style.md`（文体: です・ます / 一人称 / 読者の呼び方 / 用語の統一表 / 数値と出典の書き方 / 各ユニットが冒頭と末尾で受け渡す一文）を書いて 3 体すべてに渡す（前ユニットの本文を待たない。細部の統一は手順5 の fix-integrator が行う）。各体に brief・style.md・media-rules・skills/seo-writing の絶対パスを渡す。出力は `units/U<n>.draft.md`。
+2. **執筆**: unit-drafter（Sonnet, effort medium）を **U1 → U2 → U3 の順次**で起動する（前ユニットの本文を次に渡し、文体・用語を揃える）。手順1 で `units/style.md`（文体: です・ます / 一人称 / 読者の呼び方 / 用語の統一表 / 数値と出典の書き方）も書いて毎回渡す。各体に brief・style.md・前ユニットの draft・media-rules・skills/seo-writing の絶対パスを渡す。出力は `units/U<n>.draft.md`。
 3. **図解**: 手順2 と**並列**に diagram-maker（Sonnet）を H2 テーマごと（最大 4 体同時）に起動し、`skills/diagram-maker` の経路 A（HTML/CSS）で `memory/work/<kw>/figures/<h2-slug>.html` + 同名 `.md`（alt / caption / 出典）を作らせる。PNG 化はメインループ: `figures/` を `python -m http.server <port> --bind 127.0.0.1` で配信し、ブラウザで `http://127.0.0.1:<port>/<slug>.html` を開いて `#figure` 要素をスクリーンショット → `figures/<slug>.png`（`file://` は Playwright で拒否される。Playwright の保存先は作業ディレクトリ配下に限られるので、保存後に figures/ へコピーする — 2026-09-16 実測）。終わったらサーバーを止める。経路 B（画像生成 AI）は .prompt.md を受け取ってユーザー指定のサービスで生成する。
-4. **ファクトチェック**: 3 ユニットが揃ったら fact-checker（Haiku）を **3 体同時**に起動する（1 体ずつ順に回さない）。数値・固有名詞・法規に触れる断定・AIO と矛盾する記述・出典の無い統計を洗い、`units/U<n>.facts.md` に「要修正（根拠）/ 要出典 / OK」で返させる。要修正は unit-drafter に差し戻し（同じ体を SendMessage で継続）。
+4. **ファクトチェック**: **完了したユニット単位**で fact-checker（Haiku）へ回す。次のユニットの執筆と同じメッセージで起動し、返りを待ってから次を書かせない（上の表）。数値・固有名詞・法規に触れる断定・AIO と矛盾する記述・出典の無い統計を洗い、`units/U<n>.facts.md` に「要修正（根拠）/ 要出典 / OK」で返させる。要修正は unit-drafter に差し戻し（同じ体を SendMessage で継続）。
 5. **統合**: 先にメインループが `cat units/U1.draft.md units/U2.draft.md units/U3.draft.md > article.md` で 1 本に連結する。fix-integrator（Opus, effort medium）には連結済みの article.md + 図解 + facts + media-rules を渡し、**全文を書き直させず Edit で差分修正**させる（全文の再生成は 1 本で数分かかる）。(a) 文体・用語の統一 (b) 装飾ルール（見出し記法・強調・表・箇条書き・引用の書式）の適用 (c) 図解の挿入位置と alt (d) 内部リンクの埋め込み (e) メタディスクリプション・スラッグ案、を行わせて `memory/work/<kw>/article.md` を作る。
 6. **ルール＆レギュレーションゲート**（通るまで修正ループ、最大3周）:
    - 機械判定: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py --article memory/work/<kw>/article.md --required memory/work/<kw>/required_keywords.txt --keyword "<kw>" --h2-median-file memory/work/<kw>/h2_median.txt --profile knowledge/config/config.yaml --rules knowledge/rules/gate_rules.yaml`（必須KW網羅・施策KW のタイトル判定・禁止語・文字数・見出し数・リンク数・alt 欠落。③ と同じ基準）。

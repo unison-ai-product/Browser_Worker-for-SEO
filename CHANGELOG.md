@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-17
+
+### Fixed（仕様メモとの突合で見つけたずれ。v0.2.3 の速度改善で入れてしまった分を含む）
+- ④-1「順次作成」: v0.2.3 で 3 体同時にした執筆を U1→U2→U3 の順次に戻す。速さは「次ユニットの執筆と前ユニットのファクトチェックを同時に起動する」流し方で確保（④-3「完了ユニット単位で事実確認」どおり）
+- ③-6「site:検索で見出しのキーワードごとにピックアップ」: v0.2.3 で WordPress 検索 API 優先・1 回にしたのを、H2 ごとの site: 検索に戻す（検索窓に打たず 1 往復にまとめる）
+- ①-5 関連する質問の「内容と回答」: v0.2.3 で 4 問に減らした展開を最大 8 問に戻す
+- ②-6「Webfetch で取得できる…LLM が通常みるテキスト」: LLM 閲覧テキストはブラウザ描画のテキストではなく WebFetch で返った本文を記録する
+- ①-1「シークレットモード」: 検索 URL に `pws=0` を付ける（シークレットは Claude in Chrome から起動できないため、新規タブ + pws=0 + ログイン状態の記録で代替）。「シークレットモードが開けません」と途中で報告したりユーザーに頼んだりしないよう、手順と運用ルールに明記（実機で発生）
+
+### Changed
+- サブエージェントの暴走防止（実機で 1 体が 26 ステップ動いた）: ツール無制限だった 5 体（article-analyzer / serp-collector / unit-drafter / diagram-maker / fix-integrator）に `tools:` を指定してブラウザ・Bash・検索系を外し、全 9 体に「ツール呼び出しの上限」（5〜20 回）と「探さない・不足は返す・やり直しは 1 回」を明記。手順書を読ませるのをやめ、スキルだけ読ませる
+
 ## [0.2.3] - 2026-09-17
 
 ### Changed（速度: 実機で 1 本 1 時間超 → 目安 50 分。ゲート・監査は省かない）
@@ -99,7 +111,8 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.4
 [0.2.3]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.3
 [0.2.2]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.2
 [0.2.1]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.1

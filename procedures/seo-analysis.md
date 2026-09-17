@@ -17,7 +17,7 @@ argument-hint: <検索キーワード>
 3. **見出し配下の内部リンク**: JSON の `sections`（H2 → 同一ドメインのリンク・外部リンク件数）を「見出し → リンク先タイトル・URL」の形で写す（遷移マップ）。ナビゲーション・CTA ボタン（「無料エントリー」等）は除く。
 4. **主義・主張の分類**: 記事の中心主張を 3 つまで抜き出し、キーワードに対する世論（AIO と上位記事の多数派）を基準に `reinforce`（世論強化）/ `oppose`（世論反対）/ `neutral`（中立）で分類。切り抜きは**原文 60 字以内の引用 + 出典 URL**。
 5. **AIO 引用箇所の特定**: AIO の引用 URL がこの記事なら、AIO 本文の各文と記事本文を突き合わせ、引用元と思われる段落（見出し名・冒頭 40 字）を特定。AIO がどう言い換えたか（原文 → AIO 文）を並記。
-6. **構造化データと LLM 閲覧テキスト**（JSON の `jsonld_types` / `jsonld` / `og_*` / `llm_text_head` を写す。WebFetch は要約済みテキストしか返さず `<meta>` と JSON-LD は取れないので、ここは JSON が正）: `<script type="application/ld+json">` の @type（Article / FAQPage / BreadcrumbList / HowTo 等）と主要フィールド、`<title>`・OGP、そして本文をプレーンテキスト化した先頭 300 字（LLM が読む形）を記録。
+6. **構造化データと LLM 閲覧テキスト**: 構造化データは JSON の `jsonld_types` / `jsonld`（@type と主要フィールド）と `<title>`・OGP を写す（WebFetch は `<meta>` と JSON-LD を返さないので、ここは JSON が正）。**LLM 閲覧テキストは手順1 の WebFetch で実際に返ってきた本文**の先頭 300 字を記録する（LLM が取得時に見る形。ブラウザで描画した `llm_text_head` とは別物）。両者を比べ、WebFetch 側で見出しや本文が欠ける（JS 描画に依存している）記事はその旨を 1 行で書く。
 7. 結果を `memory/work/<kw>/analysis_<順位>.md` に書いて返す。
 
 ## 手順（統合 — メインループ）

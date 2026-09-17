@@ -1,5 +1,8 @@
 # SEO Content Worker for Claude Cowork
 
+> **利用者向けの配布はこちら → https://github.com/UNISON-TECHNOLOGY/seo-content-worker** （marketplace に追加する URL・`.plugin` のダウンロードはこのリポジトリ。ログイン不要）
+> `unison-ai-product/Browser_Worker-for-SEO` は開発用で、`main` は作業中の状態を含みます。
+
 SEO 記事のコンテンツ制作を、①SERPs解析 → ②記事分析 → ③構成案 → ④記事作成・WP 下書きの 4 段階で回す Cowork プラグイン。
 ブラウザ操作は browser-worker（Delvework）のゲート機構を同梱して自己完結。サブエージェントは Sonnet 実行 / Haiku 検査 / Opus 統合判断の 3 層。成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite。
 

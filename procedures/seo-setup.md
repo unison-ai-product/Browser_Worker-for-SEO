@@ -96,6 +96,8 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/seo-db.py init
 
 `knowledge/config/packs.conf` に `serps=on` `analysis=on` `outline=on` `write=on` `diagram=on` `wp_post=on` を書く。off にした機能は提案も自動発火もしない（SessionStart が通知）。
 
+`update_check=off` を書くと、セッション開始時の更新チェック（配布リポジトリの公開ファイルを 1 日 1 回 GET して新しい版を 1 行で知らせる。送信する情報は無い）を止める。
+
 ## feedback — フィードバックメモリの更新サイクル
 
 1. **ルールフィードバックメモリ**: ユーザーが成果物を直した・評価したら、その場で `knowledge/feedback/lessons.md` に `- YYYY-MM-DD | <ステージ> | <指摘> | <対応>` を 1 行、`seo-db.py feedback add` で 1 行。

@@ -31,7 +31,7 @@ argument-hint: <検索キーワード>
    ```bash
    echo "VERIFIED draft: <タイトル> id=<post_id>" > memory/.workflow/ov_done
    ```
-10. 締め（seo-start 手順7）。完了報告: WP 下書きのタイトル・post_id・プレビュー URL / ゲート周回数 / ファクトチェックの要出典項目（残っていれば） / 図解の枚数。記事本文はローカルに残さない（`memory/work/<kw>/` は次回同キーワード開始時に上書きされる一時物）。
+10. 締め（seo-start 手順7）。完了報告: WP 下書きのタイトル・post_id・プレビュー URL / ゲート周回数 / ファクトチェックの要出典項目（残っていれば） / 図解の枚数。最後に「次の一手」（procedures/seo-article.md §3。④ の次は人間による下書きの確認と公開）を 1 行で示す。記事本文はローカルに残さない（`memory/work/<kw>/` は次回同キーワード開始時に上書きされる一時物）。
 
 ## 禁止・注意
 

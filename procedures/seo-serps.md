@@ -29,7 +29,7 @@ argument-hint: <検索キーワード>
    - スプレッドシート `SERPs` シートに 1 行追記（Drive の MCP ツール。`config.yaml` の `sheet_id`。列順はレイアウト正本に従う）。
    - `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/seo-db.py serp add --keyword "<kw>" --json memory/work/<kw>/serps.json`。
    - `knowledge/keywords/<kw>.md` に要約（AIO 有無・上位5 URL・SERP 特徴）を追記。
-7. 完了報告: AIO の要旨（3行以内）と引用 URL 数 / 上位5記事の順位・ドメイン / PAA 数 / personalized フラグ / スプレッドシートの行番号。単体実行なら seo-start 手順6〜7 で締める。
+7. 完了報告: AIO の要旨（3行以内）と引用 URL 数 / 上位5記事の順位・ドメイン / PAA 数 / personalized フラグ / スプレッドシートの行番号。単体実行なら seo-start 手順6〜7 で締め、最後に「次の一手」（procedures/seo-article.md §3。① の次は `/記事分析`）を 1 つだけ提案する。
 
 ## 禁止・注意
 

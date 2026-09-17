@@ -47,12 +47,30 @@ if [ ! -d "$PROJECT_DIR/knowledge" ]; then
 fi
 
 # 初期セットアップ: 未回答のときだけ1行案内（回答済みなら何も注入しない = コンテキスト消費ゼロ）
-SETUP_FILE="$PROJECT_DIR/knowledge/config/setup.yaml"
-if [ -d "$PROJECT_DIR/knowledge" ] && [ ! -f "$SETUP_FILE" ]; then
-  PREFIX="${PREFIX}【セットアップ】初期ヒアリング未回答。最初の依頼の前に /SEO設定（procedures/seo-setup.md）を1行で案内すること（強制はしない）。 "
-elif [ -f "$SETUP_FILE" ] && grep -q "completed: pending" "$SETUP_FILE" 2>/dev/null; then
-  PREFIX="${PREFIX}【セットアップ】未回答の項目が残っている（setup.yaml: pending）。区切りの良いタイミングで /SEO設定 の続きを1行で案内。 "
+if [ -d "$PROJECT_DIR/knowledge" ] && [ ! -f "$PROJECT_DIR/knowledge/data/seo.db" ]; then
+  PREFIX="${PREFIX}【セットアップ】初回設定が途中（記憶 DB 未初期化）。最初の依頼の前に /SEO設定（procedures/seo-setup.md。続きから再開する）を1行で案内すること（強制はしない）。 "
 fi
+
+# 更新チェック: 配布リポジトリの plugin.json と自分の version を比べ、新しい版があれば1行だけ案内する。
+# 送るものは無い（公開ファイルを1つ GET するだけ）。1日1回・3秒で打ち切り・失敗は黙って無視。packs.conf の update_check=off で止まる。
+# SEO_UPDATE_URL はテスト用の差し替え（file:// も可）。
+update_check() {
+  local manifest="$SCRIPT_DIR/../../.claude-plugin/plugin.json" stamp="$PROJECT_DIR/memory/.update_check" today cur repo url latest
+  grep -qE '^update_check=off' "$PROJECT_DIR/knowledge/config/packs.conf" 2>/dev/null && return 0
+  command -v curl >/dev/null 2>&1 || return 0
+  today="$(date +%Y-%m-%d)"
+  [ "$(cat "$stamp" 2>/dev/null)" = "$today" ] && return 0
+  cur="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p' "$manifest" 2>/dev/null | head -1)"
+  repo="$(sed -n 's#.*"repository"[[:space:]]*:[[:space:]]*"https://github.com/\([^"]*\)".*#\1#p' "$manifest" 2>/dev/null | head -1)"
+  url="${SEO_UPDATE_URL:-https://raw.githubusercontent.com/${repo}/main/.claude-plugin/plugin.json}"
+  [ -n "$cur" ] && { [ -n "$repo" ] || [ -n "${SEO_UPDATE_URL:-}" ]; } || return 0
+  latest="$(curl -fsS --max-time 3 "$url" 2>/dev/null | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p' | head -1)"
+  mkdir -p "$PROJECT_DIR/memory" 2>/dev/null && printf '%s' "$today" > "$stamp" 2>/dev/null
+  [ -n "$latest" ] || return 0
+  [ "$latest" != "$cur" ] && [ "$(printf '%s\n%s\n' "$cur" "$latest" | sort -V | tail -1)" = "$latest" ] || return 0
+  PREFIX="${PREFIX}【更新あり】seo-content-worker v${latest} が出ています（いま v${cur}）。最初の返答の冒頭で「プラグインの新しい版 v${latest} があります。Cowork の 設定 → プラグイン で更新できます」と1行だけ伝え、作業は止めずに続けること（自分で更新しようとしない・GitHub を見に行かない）。 "
+}
+update_check
 
 # タスクPack設定（knowledge/config/packs.conf）: off のパックを通知に含める
 PACKS_CONF="$PROJECT_DIR/knowledge/config/packs.conf"

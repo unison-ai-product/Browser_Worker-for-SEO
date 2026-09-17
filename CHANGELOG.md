@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-17
+
+### Added
+- 更新チェック: セッション開始時に配布リポジトリの plugin.json と自分の version を比べ、新しい版があれば 1 行だけ案内する（1 日 1 回・3 秒で打ち切り・失敗は無視・送信する情報なし。`packs.conf` の `update_check=off` で停止）
+
+### Changed
+- 単体実行の完了報告の最後は、記事制作フローの次の段を 1 つだけ提案（① → /記事分析 → /構成案 → /記事作成）。「次へ進む / ここで止める」の 2 択で、進むなら同じキーワードでそのまま続行。`/SEO設定` への寄り道は次の一手にしない
+
+### Fixed
+- SessionStart: 存在しない setup.yaml を見て毎回「初期ヒアリング未回答」を出していたのを、記憶 DB 未初期化のときだけに
+
 ## [0.2.1] - 2026-09-17
 
 ### Changed
@@ -79,7 +90,8 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.2
 [0.2.1]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.1
 [0.2.0]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.0
 [0.1.0]: https://github.com/unison-ai-product/Browser_Worker-for-SEO/releases/tag/v0.1.0

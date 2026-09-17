@@ -11,7 +11,7 @@ argument-hint: <検索キーワード> [到達点]
 - 引数からキーワードと到達点を取る。到達点の語彙: `SERPsまで` / `分析まで` / `構成案まで` / `記事まで`（既定 = 記事まで）。
 - キーワードが複数（読点・改行区切り）なら1本ずつ順に回す（並列にしない。Google 検索の連続入力は間隔を空ける）。
 - `procedures/seo-start.md` をタスク名 `article_<キーワード>` で実行する（通しは active 1本。ステージ境界で `memory/.workflow/stage` を書き換える）。
-- 過去実行の確認: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/seo-db.py history "<キーワード>"` で SERP 履歴・構成案履歴を見る。7日以内の SERP 履歴があればユーザーに「再取得するか流用するか」を1問で聞く。
+- 過去実行の確認: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/seo-db.py history "<キーワード>"` で SERP 履歴・構成案履歴を見る。7 日以内の SERP 履歴と `memory/work/<kw>/serps.json` があれば**聞かずに流用**し、完了報告に「① は <日付> の取得分を流用」と 1 行書く（再取得したいときはユーザーが /SERPs解析 を単体で実行する）。
 
 ## 1. ステージ実行
 

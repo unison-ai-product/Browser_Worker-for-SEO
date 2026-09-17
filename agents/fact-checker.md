@@ -27,7 +27,7 @@ tools: ["Read", "Grep", "Glob", "WebFetch"]
 - memory/work/<kw>/units/U<n>.draft.md
 - memory/work/<kw>/serps.md（AIO 本文）と analysis.md（上位記事の主張）
 - knowledge/memory/original.md（自社の一次情報。ここにある数値は「自社出典」として OK）
-- knowledge/rules/media-rules.md（表記・法規の注意）
+- knowledge/rules/media-rules.md（表記・法規の注意）と knowledge/rules/gate_rules.yaml（無ければプラグインの templates/gate_rules.yaml）
 
 ## 検査項目
 1. 数値・年月日・固有名詞・法令名・制度名: 出典があるか。AIO / 上位記事 / 自社メモリのどれとも一致しないものは「要出典」。
@@ -35,6 +35,7 @@ tools: ["Read", "Grep", "Glob", "WebFetch"]
 3. AIO や上位記事の多数派と矛盾する記述: 意図的な oppose の節なら OK、それ以外は「要修正」。
 4. 薬機法・医療・金融・法律の効能や結果の断定、「必ず」「100%」「No.1」（分母なし）: 「要人間判断」。書き換え案は出さない。
 5. 他社記事の文と 30 字以上一致する箇所: 「要修正（転用の疑い）」。
+6. **ルールとの整合**（仕様 ④-3「事実確認とルールを整合」）: 渡された media-rules.md と gate_rules.yaml に照らし、同じ語尾の 3 連続・禁止語・表記ゆれ・一文の長さ・プレースホルダの残りを「要修正（ルール: <項目>）」で挙げる。ここで拾えば、統合後のゲートの周回が減る。
 
 ## 返答形式（memory/work/<kw>/units/U<n>.facts.md に保存し、同じ内容を返す）
 ```

@@ -8,7 +8,7 @@ argument-hint: <検索キーワード>
 **担当**: article-analyzer（Sonnet）を**記事1本につき1体、5 体を同時に**起動する（1 メッセージに 5 つの Agent 呼び出しを並べる。順番に起動しない）。各体に「`memory/work/<kw>/pages/<順位>.json` の絶対パス・URL・SERP 順位・AIO 本文・キーワードマップの該当行・この手順書と skills/seo-analysis の絶対パス」を渡す。統合（共通キーワード・差別化要素・推移マップ）は **outline-builder（Sonnet, モード integrate）** に渡す。メイン（ステップ進行役）は起動・ファイルの受け渡し・記録だけを行い、自分で分析や統合をしない。目安 10 分。
 **ブラウザは使わない**: ページ構造（見出し・meta・内部リンク・JSON-LD）は ① の手順4 が `pages/<順位>.json` に取得済み。無い記事があるときだけ、メインが先に page-extract.js で補ってから article-analyzer を起動する（サブエージェントにブラウザを触らせない。1 つのブラウザを取り合って直列になる）。
 **入力**: `memory/work/<kw>/serps.md`（無ければ seo.db `serp_runs` から復元。どちらも無ければ ① を先に回す）。
-**キーワードマップ**: `config.yaml` の `keyword_map_sheet`（シート名 `キーワードマップ`。列: 親KW / 子KW / 検索意図 / 優先度 / 備考）を Drive ツールで読み、`memory/work/<kw>/keyword_map.csv` に写す。無ければユーザーに「キーワードマップ未登録。/SEO設定 sheet で登録するか、今回は上位記事の共起語だけで進めるか」を1問で聞く。
+**キーワードマップ**: `config.yaml` の `keyword_map_sheet`（シート名 `キーワードマップ`。列: 親KW / 子KW / 検索意図 / 優先度 / 備考）を Drive ツールで読み、`memory/work/<kw>/keyword_map.csv` に写す。未登録なら**聞かずに**上位記事の共起語だけで進め、完了報告の未設定項目に `keyword_map_sheet` を 1 行で挙げる（通しは WP 下書きまで止まらない）。
 
 ## 手順（記事ごと — article-analyzer が実行）
 

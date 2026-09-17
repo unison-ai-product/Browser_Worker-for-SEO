@@ -17,10 +17,12 @@ argument-hint: <検索キーワード> [到達点]
 
 | ステージ | 手順書 | 主担当エージェント | 成果物の置き場 |
 |---|---|---|---|
-| ① SERPs解析 | procedures/seo-serps.md | serp-collector（Sonnet） | スプレッドシート `SERPs` シート + seo.db `serp_runs` |
-| ② 記事分析 | procedures/seo-analysis.md | article-analyzer（Sonnet）× 上位5記事 | スプレッドシート `記事分析` シート + seo.db `article_analyses` |
-| ③ 構成案 | procedures/seo-outline.md | メインループ + keyword-gate（Haiku）+ adversarial-reviewer（Opus） | スプレッドシート `構成案` シート + seo.db `outlines` |
-| ④ 記事作成 | procedures/seo-write.md | unit-drafter×3 / diagram-maker（Sonnet）→ fact-checker（Haiku）→ fix-integrator（Opus） | WP 下書き（ローカル保存なし） |
+| ① SERPs解析 | procedures/seo-serps.md | メイン（ブラウザ 2 往復）→ serp-collector（Sonnet） | スプレッドシート `SERPs` シート + seo.db `serp_runs` |
+| ② 記事分析 | procedures/seo-analysis.md | article-analyzer（Sonnet）× 上位5記事 → outline-builder（Sonnet, integrate） | スプレッドシート `記事分析` シート + seo.db `article_analyses` |
+| ③ 構成案 | procedures/seo-outline.md | outline-builder（Sonnet）+ keyword-gate（Haiku）+ adversarial-reviewer（Opus） | スプレッドシート `構成案` シート + seo.db `outlines` |
+| ④ 記事作成 | procedures/seo-write.md | outline-builder（briefs）→ unit-drafter×3 / diagram-maker（Sonnet）→ fact-checker（Haiku）→ fix-integrator（Opus） | WP 下書き（ローカル保存なし） |
+
+**メイン（会話の本体）はステップ進行役**: ステップを順に進め、サブエージェントを起動し、ファイルを受け渡し、フラグを管理し、ブラウザ操作（SERP の取得・site: 検索・図解の PNG 化・WP 下書き）とスクリプト実行（ゲート・seo-db・wp-draft）を行う。**読み解く・組み立てる・書くはサブエージェントの仕事**で、メインは自分でやらない（メインのモデルが何であっても所要時間と品質が変わらないようにするため）。
 
 各ステージの開始時に `echo "<serps|analysis|outline|write>" > memory/.workflow/stage`。
 ステージ間の受け渡しは `memory/work/<kw>/` の作業ファイル（serps.md / analysis.md / outline.md / units/）。これは一時物で、正はスプレッドシートと seo.db。
@@ -49,7 +51,7 @@ argument-hint: <検索キーワード> [到達点]
 通し 1 本の目安は **50 分**（① 5 分 / ② 10 分 / ③ 10 分 / ④ 25 分）。速さは「ブラウザの往復を減らす」「サブエージェントを同時に起動する」で稼ぎ、ゲート・ファクトチェック・敵対検証・送信前監査は省かない。
 
 - ブラウザの読み取りは `templates/js/` の抽出スクリプト（serp-expand / serp-extract / page-extract）を javascript_tool で 1 回実行する。1 要素ずつ read_page・クリックを往復しない（docs/steps/speed.md §1）。
-- サブエージェントは同じ段の分を **1 メッセージで同時に**起動する（② 5 体 / ④ 執筆と図解 / ④ 次ユニットの執筆と前ユニットのファクトチェック）。サブエージェントには入力を絶対パスで渡し、「これ以外は読まなくてよい」と書く。各体のツール呼び出し上限（agents/*.md の「ツール呼び出しの上限」）を超えて返らない体は待たずに止め、メインループが不足分を補う。
+- サブエージェントは同じ段の分を **1 メッセージで同時に**起動する（② 5 体 / ④ 執筆と図解 / ④ 次ユニットの執筆と前ユニットのファクトチェック）。サブエージェントには入力を絶対パスで渡し、「これ以外は読まなくてよい」と書く。各体のツール呼び出し上限（agents/*.md の「ツール呼び出しの上限」）を超えて返らない体は待たずに止め、メインが不足分を補う。
 - ステージの開始・終了時刻を `memory/work/<kw>/timing.md` に 1 行ずつ追記する（`date +%H:%M` の値。例: `① 13:05-13:10`）。完了報告とログ（knowledge/logs）の `stage_minutes` に各段の分数を書く。目安の 2 倍を超えた段は、何に時間がかかったかを 1 行で `shortcut_memo` に残す（次回の短縮材料）。
 - 接続フォルダへの書き戻しはステージの終わりに 1 回だけ行う（ファイルを 1 つ書くたびに同期しない）。
 

@@ -22,8 +22,8 @@ step "plugin.json and marketplace.json versions match" \
 # 2. structure
 check_skills() { for f in skills/*/SKILL.md; do d=$(basename "$(dirname "$f")"); n=$(grep -m1 '^name:' "$f" | sed 's/name: *//'); [ "$d" = "$n" ] || { echo "$d != $n"; return 1; }; done; }
 step "skill names match directories" check_skills
-check_agents() { for a in serp-collector article-analyzer unit-drafter diagram-maker fact-checker keyword-gate pre-publish-verifier fix-integrator adversarial-reviewer; do [ -f "agents/$a.md" ] && grep -q "^name: $a\$" "agents/$a.md" || { echo "agent $a"; return 1; }; done; }
-step "9 agents exist with matching names" check_agents
+check_agents() { for a in serp-collector article-analyzer outline-builder unit-drafter diagram-maker fact-checker keyword-gate pre-publish-verifier fix-integrator adversarial-reviewer; do [ -f "agents/$a.md" ] && grep -q "^name: $a\$" "agents/$a.md" || { echo "agent $a"; return 1; }; done; }
+step "10 agents exist with matching names" check_agents
 check_procs() { for p in seo-start seo-article seo-serps seo-analysis seo-outline seo-write seo-setup seo-verify; do [ -f "procedures/$p.md" ] || { echo "procedure $p"; return 1; }; done; [ "$(ls commands/*.md | wc -l)" -ge 7 ]; }
 step "8 procedures and 7 commands exist" check_procs
 check_roster() { diff <(grep -o "ROSTER='[^']*'" hooks/scripts/subagent-guard.sh | sed "s/ROSTER='//;s/'//" | tr '|' '\n' | sort) <(ls agents/*.md | xargs -n1 basename | sed 's/\.md$//' | sort); }

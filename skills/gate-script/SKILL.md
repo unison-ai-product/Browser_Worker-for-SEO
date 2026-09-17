@@ -57,7 +57,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/keyword-gate.py \
 
 ## 4. 修正ループ
 
-FAIL → fix-integrator（記事）/ メインループ（構成案）が FAIL 項目だけ直す → 再実行。**最大 3 周**。通らなければ止めてユーザーに報告する（基準は緩めない。例外はユーザーが gate_rules.yaml を編集して作る）。修正 3 回の運用（推敲・校正校閲・校了）は checklist.md §2。
+FAIL → fix-integrator（記事）/ メイン（構成案）が FAIL 項目だけ直す → 再実行。**最大 3 周**。通らなければ止めてユーザーに報告する（基準は緩めない。例外はユーザーが gate_rules.yaml を編集して作る）。修正 3 回の運用（推敲・校正校閲・校了）は checklist.md §2。
 
 ## 5. フィードバックの昇格（ゲートスクリプト化メモリ）
 

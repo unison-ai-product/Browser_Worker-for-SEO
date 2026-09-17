@@ -5,7 +5,7 @@ argument-hint: <検索キーワード>
 
 # ① SERPs解析
 
-**担当**: serp-collector（Sonnet, effort medium）にブラウザ操作と抽出を委譲してよい。ただし委譲プロンプトにはこの手順書の絶対パスと `skills/seo-analysis/SKILL.md` の絶対パスを渡し、ゲート（seo-start）はメインループが先に通す。
+**担当**: メイン（ステップ進行役）がやるのは、ゲート（seo-start）・ブラウザの 2 往復（手順2・4）・返った JSON とテキストのファイル保存・記録（手順6）だけ。**抽出と整形（手順3・5）は必ず serp-collector（Sonnet, effort low）に渡す**（メインが自分で読み解いて serps.md を書かない）。委譲プロンプトには `serp_raw.json` / `serp_raw.md` / `pages/` / `skills/seo-analysis/SKILL.md` / 出力先の絶対パスを渡す。
 **スキル**: `skills/seo-analysis/SKILL.md`（SERP 要素の定義・順位の数え方・AIO の扱い）を Read してから始める。
 
 ## 手順
@@ -19,14 +19,14 @@ argument-hint: <検索キーワード>
    - 返った JSON を `memory/work/<kw>/serp_raw.json`、テキストを `serp_raw.md` に保存する。
    - `captcha: true` なら中断して報告（突破しない）。`organic` が 0 件（Google の DOM 変更でセレクタが外れた）のときだけ、従来の read_page（`main "ウェブ検索結果"` を ref_id 指定）に切り替え、`knowledge/sites/google-search.md` に 1 行記録する。
    - `personalized: true`（ログイン中）や `insights_widget: true`（Search Console Insights / Google 広告ウィジェットの挿入）はそのまま記録し、完了報告で「Google にログイン中のため検索結果に個人化の影響がありえます（pws=0 指定済み）」と 1 行添える（ログアウト操作はしない）。
-3. **抽出**（skills/seo-analysis の定義に従う。材料は手順2 の JSON とテキストだけ。追加のブラウザ操作はしない）:
+3. **抽出**（serp-collector が行う。手順4 のあとに 1 回だけ起動し、手順3 と 5 をまとめて任せる。skills/seo-analysis の定義に従う。材料は手順2・4 のファイルだけ。追加のブラウザ操作はしない）:
    - AIO: `aio.text` と `aio.links`。`aio: null` なら `aio: none` と記録し、再検索はしない。
    - 広告: `sponsored: true` の件数を数え、記事順位の計算から除外する。
    - 記事サイトの出現順位: AIO・広告・動画カルーセル・ショッピング・地図・ニュース・SNS（X / YouTube / Instagram）・EC（Amazon / 楽天）・Yahoo!知恵袋を除いた**記事型ページ**の順に 1 から採番。除外した要素は `serp_features` として種類と位置を記録する。
    - 関連する質問（PAA）: 質問文（JSON）と、開いた最大 8 問の回答要約・出典 URL（テキスト）。
    - 関連する商品やサービス / 他の人はこちらも検索 / サジェスト: 語句のリスト。
 4. **上位 5 記事のページ構造を 1 往復で取る**（② がこのファイルをそのまま使う。② でブラウザを開き直さない）: 上位 5 記事と知恵袋（あれば 1 件）について、**browser_batch の 1 回**で `navigate <href>` → javascript_tool ← `${CLAUDE_PLUGIN_ROOT}/templates/js/page-extract.js` の中身、を記事の数だけ並べる。返った JSON を `memory/work/<kw>/pages/<順位>.json`（知恵袋は `pages/chiebukuro.json`）に保存する。これでメタディスクリプション（実 `<meta>`）・見出し階層・H2 配下の内部リンク・JSON-LD・公開日/更新日・著者・文字数が揃う（読み取り専用なのでゲートは不要）。取れなかった記事（403・JS 描画で本文が空）だけ WebFetch で補う。
-5. `serps.json` を組み立てる（上位 5 記事: 順位・タイトル・URL・SERP スニペット・`meta_description`）。
+5. serp-collector が `serps.json` と `serps.md` を組み立てる（上位 5 記事: 順位・タイトル・URL・SERP スニペット・`meta_description`）。
 6. **記録**:
    - `memory/work/<kw>/serps.md` に整形（templates/sheet-layout.md の `SERPs` シート列順で）。
    - スプレッドシート `SERPs` シートに 1 行追記（Drive の MCP ツール。`config.yaml` の `sheet_id`。列順はレイアウト正本に従う）。

@@ -1,6 +1,6 @@
 ---
 name: diagram-maker
-description: 見出しテーマに合わせた図解の生成専任（Sonnet 実行級）。skills/diagram-maker の型で HTML/CSS の図（経路 A）または画像生成 AI 用プロンプト（経路 B）と alt テキスト・キャプション・出典を作る。Use when procedures/seo-write.md の手順3 で H2 ごとに並列委譲するとき（最大 4 体同時）。Not for 本文執筆、図の要否判断（→メインループが H2 を選ぶ）。
+description: 見出しテーマに合わせた図解の生成専任（Sonnet 実行級）。skills/diagram-maker の型で HTML/CSS の図（経路 A）または画像生成 AI 用プロンプト（経路 B）と alt テキスト・キャプション・出典を作る。Use when procedures/seo-write.md の手順3 で H2 ごとに並列委譲するとき（最大 4 体同時）。Not for 本文執筆、図の要否判断（→メインが H2 を選ぶ）。
 
 <example>
 Context: ④ 記事作成で「相続手続きの流れ」の H2 に図解が必要
@@ -31,8 +31,8 @@ tools: ["Read", "Write"]
 - 出力先 memory/work/<kw>/figures/<h2-slug>.html（経路 A）または <h2-slug>.prompt.md（経路 B）と同名 .md（alt / caption / 出典 / 挿入位置 / route）
 
 ## 作り方（skills/diagram-maker の 2 経路）
-- 経路 A（既定）: templates/figure.html を雛形に HTML/CSS で図を組み、`memory/work/<kw>/figures/<h2-slug>.html` に保存。PNG 化（ブラウザのスクリーンショット）はメインループが行うので、この体は HTML と .md を返す。
-- 経路 B（イラスト・イメージ図）: 画像生成 AI 用のプロンプト案と枚数を .md に書いて返す。ブラウザ操作（ゲート下）はメインループが行う。この体は生成しない。
+- 経路 A（既定）: templates/figure.html を雛形に HTML/CSS で図を組み、`memory/work/<kw>/figures/<h2-slug>.html` に保存。PNG 化（ブラウザのスクリーンショット）はメインが行うので、この体は HTML と .md を返す。
+- 経路 B（イラスト・イメージ図）: 画像生成 AI 用のプロンプト案と枚数を .md に書いて返す。ブラウザ操作（ゲート下）はメインが行う。この体は生成しない。
 - 要素数は 7 以下。図の中の文言は本文と同じ用語。
 - 数値を描く図は出典を .md に必ず書く。出典が無い数値は描かない（「例」と明記した模式図にする）。
 

@@ -5,7 +5,16 @@ argument-hint: <検索キーワード>
 
 # ③ 記事構成案作成
 
-**目安 10 分**。**担当**: メインループが組み立てる。検算は keyword-gate（Haiku）、敵対検証は adversarial-reviewer（Opus, effort medium）。
+**目安 10 分**。**担当**: 組み立てと修正は **outline-builder（Sonnet）**、検算は keyword-gate（Haiku）、敵対検証は adversarial-reviewer（Opus, effort medium）。メイン（ステップ進行役）がやるのは、起動とファイルの受け渡し・`seo-db.py knowledge search`（結果を `original_hits.json` に保存して渡す）・site: 検索のブラウザ 1 往復（結果を `site_links.json` に保存して渡す）・ゲートの実行・記録だけ。**メインが自分で見出しやタイトルを考えない。**
+
+| 順 | 誰が | 何を |
+|---|---|---|
+| 1 | メイン | `seo-db.py knowledge search` でユーザーオリジナル知識を引き `original_hits.json` に保存 |
+| 2 | outline-builder（outline） | 手順1〜5・7 → `outline.md` / `outline_notes.md` |
+| 3 | メイン | 手順6 の site: 検索（1 往復）→ `site_links.json`、手順8 のゲート実行 → `gate_outline_1.json` |
+| 4 | adversarial-reviewer | 手順9 の敵対検証（手順3 と同じメッセージで起動してよい） |
+| 5 | outline-builder（revise） | ゲート FAIL・敵対検証の指摘・内部リンクを Edit で反映 |
+| 6 | メイン | ゲート再実行（通るまで・最大 2 周。FAIL なら 5 に戻す）→ 手順10 の記録 |
 **入力**: `memory/work/<kw>/serps.md` と `analysis.md`（無ければ seo.db から復元。無ければ ①② を先に）。
 **スキル**: `skills/seo-outline/SKILL.md`（構成案の型）と `skills/content-marketing/SKILL.md`（見出し調整の観点）を Read。
 

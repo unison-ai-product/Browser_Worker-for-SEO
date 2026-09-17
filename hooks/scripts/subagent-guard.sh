@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/_common.sh"
 
-ROSTER='serp-collector|article-analyzer|unit-drafter|diagram-maker|fact-checker|keyword-gate|pre-publish-verifier|fix-integrator|adversarial-reviewer'
+ROSTER='serp-collector|article-analyzer|outline-builder|unit-drafter|diagram-maker|fact-checker|keyword-gate|pre-publish-verifier|fix-integrator|adversarial-reviewer'
 TYPE="$(printf '%s' "$STDIN_TEXT" | sed -n 's/.*"subagent_type":"\([^"]*\)".*/\1/p' | head -1)"
 
 # ワークスペース側の許可（knowledge/config/agent-allowlist.txt に1行1名。ユーザーが編集する）

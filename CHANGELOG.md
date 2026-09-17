@@ -5,6 +5,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- seo-verify 手順: `wp-draft.py --check` に `--site` が必須であることを明記（実機の /SEO検証 で判明）
+
 ## [0.2.0] - 2026-09-17
 
 ### Changed

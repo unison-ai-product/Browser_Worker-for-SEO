@@ -17,7 +17,7 @@ argument-hint: [quick / full]
 
 ## full
 
-5. quick に加えて: `keyword-gate.py --selftest`、`wp-draft.py --check`（.env があるときのみ。投稿はしない）、Drive ツールでスプレッドシートのヘッダ行が `templates/sheet-layout.md` と一致するか、`skills/*/SKILL.md` の frontmatter（name がディレクトリ名と一致）を検査。
+5. quick に加えて: `keyword-gate.py --selftest`、`wp-draft.py --site <config.yaml の wp.site_url> --check`（認証メモと wp.site_url の両方があるときのみ。`--site` は必須。投稿はしない）、Drive ツールでスプレッドシートのヘッダ行が `templates/sheet-layout.md` と一致するか、`skills/*/SKILL.md` の frontmatter（name がディレクトリ名と一致）を検査。
 6. 疑似実行（E2E は行わない）: テスト用キーワードで ① の抽出定義（skills/seo-analysis）を読み、記事順位の採番ルールを 1 例で説明できるかを自己確認。
 
 ## 報告

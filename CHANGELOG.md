@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-09-17
+
 ### Fixed（実機の通し 1 本・3 時間のログから）
 - 自社記事が同じクエリの上位にいるのに新規記事を最後まで作り、③ の敵対検証で重複が分かってリライトに切り替え（③④ がやり直し）→ ① で `own_in_serp` を記録し、10 位以内にあれば ② の前に 1 回だけ「リライト案 / 新規 / 止める」を聞く。リライト案のゲートは完成形（差分を差し込んだもの）にかける
 - seo-db.py: JSON に未知の列があると exit 2 で止まり、2 回リトライしていた → 未知の列は落として続行し、落とした列を stderr に出す
@@ -13,7 +15,7 @@
 - 「要人間判断」があっても WP 下書きまで止めない（仕様 ④-6 のゴールは下書き）。v0.1 から「`[要人間判断]` が本文に残る限りゲートが通らない = 人が入るまで進まない」になっていたのは仕様とのずれ。本文は断定を外した安全側の書き方にし、判断材料を handover.md に 1 件ずつ載せる。pre-publish-verifier は「断定のまま残っていないか」「handover に漏れが無いか」だけを見て、件数では NO-GO にしない
 - 仕様メモとの再突合で見つけた「途中で止まる」箇所を除去（ゴールは WP 下書き）: ② キーワードマップ未登録で質問 → 聞かずに共起語で進む / ③ 一次情報が無いと質問 → 聞かずに neutral で進み handover に書く / ④「承認済みの構成案」「承認が無ければ ③ の承認から」→ 承認は待たない / ④ media-rules が無ければ設定してから → 既定で進む / 通し開始時の「SERP を再取得するか」→ 7 日以内は聞かずに流用
 - 仕様 ④-6「WP へログインして装飾ルールを確認して」: 装飾の確認が /SEO設定 wp のブラウザ運用時だけになっていた → ④ の統合の前に、wordpress.md が無ければ投稿画面を読み取りだけで確認して記録（REST 投稿でも行う）
-- 仕様 ①-3「AIO と広告枠から数えて」: 記事だけの順位 `rank` に加え、AIO・広告枠も数えた画面上の位置 `serp_position` を記録
+- 仕様 ①-3「AIO と広告枠から数えて」は「AIO と広告枠を除いて記事だけを数える」の意（ユーザー確認）。現行の採番のまま
 - 仕様 ④-3「事実確認とルールを整合」: fact-checker がユニット単位でルール（語尾の連続・禁止語・表記ゆれ等）も見る
 - 図解の PNG 化: `scripts/figures-png.py`（コンテナ内の Playwright で全図を 1 回で撮る）を第一に。クラウドではユーザーのブラウザからコンテナの localhost に届かない
 
@@ -130,7 +132,8 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.6
 [0.2.5]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.5
 [0.2.4]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.4
 [0.2.3]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.3

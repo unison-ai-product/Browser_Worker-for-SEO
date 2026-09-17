@@ -1,6 +1,6 @@
 {
   "name": "seo-content-worker",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "SEO記事のコンテンツ制作 Cowork プラグイン — SERPs解析→記事分析→構成案→記事作成→WP下書きを、ゲート付きワークフローと3層サブエージェント（Sonnet実行/Haiku検査/Opus統合）で回す",
   "author": {
     "name": "UNISON TECHNOLOGY"

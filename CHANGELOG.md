@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-17
+
+### Changed
+- 配布を `UNISON-TECHNOLOGY/seo-content-worker` に分離。開発リポジトリの `main` は利用者に届かず、タグを切ったときだけ配布側へ同期される（`scripts/build-dist.py` + Release ワークフロー）
+- README に marketplace の正確な URL を明記（URL 誤りで GitHub ログインを求められる問題）
+
 ### Added
 - `scripts/verify.sh` — CI / Release / `/SEO検証` が共通で呼ぶ検証コマンド（manifests・構造・スクリプト・hooks・DB・WP 拒否・リリース整合）
 - CHANGELOG.md
@@ -61,5 +67,6 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/unison-ai-product/Browser_Worker-for-SEO/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.0
 [0.1.0]: https://github.com/unison-ai-product/Browser_Worker-for-SEO/releases/tag/v0.1.0

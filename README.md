@@ -6,9 +6,9 @@ SEO 記事のコンテンツ制作を、①SERPs解析 → ②記事分析 → �
 ## セットアップ
 
 1. Cowork の設定 → プラグインで次の URL を marketplace として追加し **seo-content-worker** を有効化。
-   `https://github.com/unison-ai-product/Browser_Worker-for-SEO`
-   - 公開リポジトリなので GitHub ログインは不要。ログインを求められたら URL の打ち間違い（組織名は `unison-ai-product`、`Browser_Worker` はアンダースコア）。存在しない URL だと GitHub が非公開扱いで認証を求めてくる。
-   - Git を使わない入れ方: [Releases](https://github.com/unison-ai-product/Browser_Worker-for-SEO/releases/latest) の `.plugin` ファイルをダウンロードして Cowork にドラッグ。
+   `https://github.com/UNISON-TECHNOLOGY/seo-content-worker`
+   - 公開リポジトリなので GitHub ログインは不要。ログインを求められたら URL の打ち間違い（組織名は `UNISON-TECHNOLOGY`、リポジトリ名は `seo-content-worker`）。存在しない URL だと GitHub が非公開扱いで認証を求めてくる。
+   - Git を使わない入れ方: [Releases](https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/latest) の `.plugin` ファイルをダウンロードして Cowork にドラッグ。
 2. Claude in Chrome をコネクタで ON（Google・WP のログイン済みブラウザを使う）。Google ドライブ連携も ON（スプレッドシート出力）。
 3. `/SEO設定` を順に: `db`（SQLite 初期化）→ `sheet`（成果物シート・キーワードマップ）→ `wp`（サイト URL・投稿方法。REST を使うならアプリケーションパスワードを **あなたが** ワークスペース直下のテキストファイル（`.env` または `wp*.txt`、2 行）に置く。チャットには貼らない）→ `profile`（想定検索者・ファネル・カテゴリ・CTA などサイト固有の値）→ `rules`（表記・装飾の差分抽出）→ 必要なら `memory`（自社の主張・一次情報の取り込み）。
 
@@ -57,6 +57,7 @@ MIT License（LICENSE を参照）。
 
 ## リリース
 
-- `main` が marketplace の参照先。安定版は Git タグ `vX.Y.Z`（GitHub Releases に `.plugin` を添付）。
+- 開発は `unison-ai-product/Browser_Worker-for-SEO`、配布は `UNISON-TECHNOLOGY/seo-content-worker`（利用者が marketplace に追加するのは配布側だけ）。配布側はタグ `vX.Y.Z` を切ったときだけ更新されるので、開発中の `main` は利用者に届かない。
+- 配布物は `python scripts/build-dist.py --out <dir>`（Git 管理下のファイルから `.github/` などの開発専用を除いたもの）。Release ワークフローがこれを配布リポジトリの `main` に同期し、同じタグと `.plugin` 付き Release をそちらに作る。Secret `DIST_REPO_TOKEN`（配布リポジトリの Contents: Read and write の fine-grained PAT）が必要。
 - 版上げは `.claude-plugin/plugin.json` と `marketplace.json` の `version` を揃え、CHANGELOG.md の `[Unreleased]` を `[X.Y.Z] - 日付` に切ってから `git tag vX.Y.Z && git push origin vX.Y.Z`。Release ワークフローが `verify.sh --release`（タグ・version・CHANGELOG の整合）→ `.plugin` ビルド → CHANGELOG の該当節を本文にした Release 作成を行う。
 - ローカル検証は `bash scripts/verify.sh`（CI と同じ内容。`/SEO検証` もこれを呼ぶ）。

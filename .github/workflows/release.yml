@@ -1,11 +1,18 @@
 name: Release
 
+# タグ vX.Y.Z で: 検証 → 配布物ビルド → 配布リポジトリへ同期 + そちらに Release 作成。
+# 配布リポジトリ（利用者が marketplace に追加する側）: UNISON-TECHNOLOGY/seo-content-worker
+# 必要な Secret: DIST_REPO_TOKEN（配布リポジトリの Contents: Read and write を持つ fine-grained PAT）
+
 on:
   push:
     tags: ["v*"]
 
 permissions:
   contents: write
+
+env:
+  DIST_REPO: UNISON-TECHNOLOGY/seo-content-worker
 
 jobs:
   release:
@@ -21,31 +28,37 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: bash scripts/verify.sh --release
 
-      - name: Build .plugin
-        run: |
-          python - <<'PY'
-          import zipfile, pathlib, json
-          v = json.load(open('.claude-plugin/plugin.json', encoding='utf-8'))['version']
-          out = pathlib.Path(f"seo-content-worker-{v}.plugin")
-          skip = {".git", ".github", "__pycache__", "memory", "knowledge", "outputs", ".claude"}
-          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-              for p in pathlib.Path(".").rglob("*"):
-                  if any(part in skip for part in p.parts) or p.is_dir() or p.suffix in (".pyc", ".plugin") or p.name == ".env": continue
-                  z.write(p, p.as_posix())
-          print(out, out.stat().st_size)
-          PY
+      - name: Build dist tree + .plugin
+        run: python scripts/build-dist.py --out "$RUNNER_TEMP/dist"
 
       - name: Release notes from CHANGELOG
         run: |
           v="${GITHUB_REF_NAME#v}"
-          awk -v v="$v" '/^## \[/{p = ($0 ~ "^## \\[" v "\\]")} p' CHANGELOG.md | tail -n +2 > notes.md
-          [ -s notes.md ] || echo "See CHANGELOG.md" > notes.md
-          cat notes.md
+          awk -v v="$v" '/^## \[/{p = ($0 ~ "^## \[" v "\]")} p' CHANGELOG.md | tail -n +2 > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || echo "See CHANGELOG.md" > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
 
-      - name: Create GitHub Release
+      - name: Sync to distribution repo
         env:
-          GH_TOKEN: ${{ github.token }}
+          DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" seo-content-worker-*.plugin \
+          [ -n "$DIST_REPO_TOKEN" ] || { echo "::error::Secret DIST_REPO_TOKEN が未設定です"; exit 1; }
+          git clone --depth 1 "https://x-access-token:${DIST_REPO_TOKEN}@github.com/${DIST_REPO}.git" "$RUNNER_TEMP/distrepo"
+          cd "$RUNNER_TEMP/distrepo"
+          git rm -rq --ignore-unmatch . >/dev/null
+          cp -a "$RUNNER_TEMP/dist/." .
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git diff --cached --quiet || git commit -q -m "release ${GITHUB_REF_NAME}"
+          git tag "${GITHUB_REF_NAME}"
+          git push -q origin HEAD:main "${GITHUB_REF_NAME}"
+
+      - name: Create Release on distribution repo
+        env:
+          GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "$RUNNER_TEMP"/seo-content-worker-*.plugin \
+            --repo "$DIST_REPO" \
             --title "seo-content-worker ${GITHUB_REF_NAME}" \
-            --notes-file notes.md
+            --notes-file "$RUNNER_TEMP/notes.md"

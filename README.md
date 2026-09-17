@@ -5,7 +5,10 @@ SEO 記事のコンテンツ制作を、①SERPs解析 → ②記事分析 → �
 
 ## セットアップ
 
-1. Cowork の設定 → プラグインでこのリポジトリを marketplace として追加し **seo-content-worker** を有効化。
+1. Cowork の設定 → プラグインで次の URL を marketplace として追加し **seo-content-worker** を有効化。
+   `https://github.com/unison-ai-product/Browser_Worker-for-SEO`
+   - 公開リポジトリなので GitHub ログインは不要。ログインを求められたら URL の打ち間違い（組織名は `unison-ai-product`、`Browser_Worker` はアンダースコア）。存在しない URL だと GitHub が非公開扱いで認証を求めてくる。
+   - Git を使わない入れ方: [Releases](https://github.com/unison-ai-product/Browser_Worker-for-SEO/releases/latest) の `.plugin` ファイルをダウンロードして Cowork にドラッグ。
 2. Claude in Chrome をコネクタで ON（Google・WP のログイン済みブラウザを使う）。Google ドライブ連携も ON（スプレッドシート出力）。
 3. `/SEO設定` を順に: `db`（SQLite 初期化）→ `sheet`（成果物シート・キーワードマップ）→ `wp`（サイト URL・投稿方法。REST を使うならアプリケーションパスワードを **あなたが** ワークスペース直下のテキストファイル（`.env` または `wp*.txt`、2 行）に置く。チャットには貼らない）→ `profile`（想定検索者・ファネル・カテゴリ・CTA などサイト固有の値）→ `rules`（表記・装飾の差分抽出）→ 必要なら `memory`（自社の主張・一次情報の取り込み）。
 

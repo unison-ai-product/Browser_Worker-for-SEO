@@ -13,5 +13,7 @@
     "wordpress",
     "cowork"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://github.com/unison-ai-product/Browser_Worker-for-SEO",
+  "repository": "https://github.com/unison-ai-product/Browser_Worker-for-SEO"
 }

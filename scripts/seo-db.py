@@ -19,6 +19,7 @@
   seo-db.py llm add --json F                       llm_citations を追記
   seo-db.py task add --json F                      task_runs を追記
 環境変数 SEO_DB でパス変更可。既定は <cwd>/knowledge/data/seo.db。
+接続フォルダ上で SQLite が直接開けない環境では、自動で一時領域の作業コピーを使い、終了時に正本へ書き戻す（手で複製しない）。
 """
 import argparse, csv, json, os, sqlite3, sys, datetime, pathlib
 import sys as _sys
@@ -30,10 +31,59 @@ DB = pathlib.Path(os.environ.get("SEO_DB", "knowledge/data/seo.db"))
 SCHEMA = HERE.parent / "templates" / "db-schema.sql"
 
 
-def conn():
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    c = sqlite3.connect(DB)
+MODE = {"mode": "direct"}
+_STATE = {}
+
+
+def _open(path):
+    c = sqlite3.connect(path, timeout=15)
     c.row_factory = sqlite3.Row
+    # WAL は共有メモリが要り、接続フォルダ（ホスト PC のマウント）では使えない。単一ファイルで完結する TRUNCATE に固定（WAL で作られた既存 DB もここで切り替わる）
+    c.execute("PRAGMA journal_mode = TRUNCATE")
+    c.execute("BEGIN IMMEDIATE"); c.execute("ROLLBACK")  # 書き込みロックが取れるかの確認
+    return c
+
+
+def _work_path():
+    import hashlib, tempfile
+    h = hashlib.sha1(str(DB.resolve()).encode("utf-8")).hexdigest()[:12]
+    d = pathlib.Path(tempfile.gettempdir()) / "seo-worker-db" / h
+    d.mkdir(parents=True, exist_ok=True)
+    return d / "seo.db"
+
+
+def _sync_back():
+    """作業コピー → 正本。接続フォルダは削除・改名ができないことがあるので、同名ファイルへの上書きだけで書き戻す。"""
+    c, work = _STATE.get("conn"), _STATE.get("work")
+    if not c or not work: return
+    changed = c.total_changes > 0 or _STATE.get("force")
+    c.close()
+    if not changed: return
+    import shutil
+    shutil.copyfile(work, DB)
+    if DB.stat().st_size != work.stat().st_size:
+        sys.stderr.write(json.dumps({"error": "seo.db の書き戻しに失敗（サイズ不一致）", "work": str(work), "db": str(DB)}, ensure_ascii=False) + chr(10)); os._exit(3)
+
+
+def conn():
+    """knowledge/data/seo.db を開く。接続フォルダ上でファイルロックが効かず直接開けないときは、
+    一時領域の作業コピーで操作して終了時に正本へ書き戻す（正本は常に knowledge/data/seo.db。SEO_DB_MODE=workcopy で強制）。"""
+    DB.parent.mkdir(parents=True, exist_ok=True)
+    if os.environ.get("SEO_DB_MODE") != "workcopy":
+        try:
+            return _open(DB)
+        except sqlite3.Error:
+            pass
+    import atexit, shutil
+    work = _work_path()
+    for junk in (work, work.with_name("seo.db-journal")):
+        if junk.exists(): junk.unlink()
+    if DB.exists() and DB.stat().st_size > 0:
+        shutil.copyfile(DB, work)
+    c = _open(work)
+    MODE["mode"] = "workcopy"
+    _STATE.update(conn=c, work=work)
+    atexit.register(_sync_back)
     return c
 
 
@@ -65,8 +115,8 @@ def insert(c, table, row, jsonify=()):
 def cmd_init(a):
     c = conn()
     c.executescript(SCHEMA.read_text(encoding="utf-8"))
-    c.commit()
-    out({"ok": True, "db": str(DB)})
+    c.commit(); _STATE["force"] = True
+    out({"ok": True, "db": str(DB), "mode": MODE["mode"]})
 
 
 def cmd_stats(a):

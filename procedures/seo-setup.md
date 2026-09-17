@@ -38,9 +38,11 @@ argument-hint: [folder / db / profile / sheet / wp / rules / memory / packs / fe
    [ -f knowledge/config/config.yaml ] || cp ${CLAUDE_PLUGIN_ROOT}/templates/config.yaml knowledge/config/config.yaml
    ```
 2. `todo` なら AskUserQuestion で保存先を 1 問で聞く。選択肢は実際に見えているフォルダから作る: (a) 既にある空のフォルダをそのまま使う（推奨）/ (b) その中に専用サブフォルダを新規作成 / (c) ドキュメント直下に新規フォルダ / (d) 保存しない（お試し。設定と記憶はセッション終了で消える）。
+   - 「空のフォルダ」と言ってよいのは、実際に一覧してファイルが 0 件だったときだけ（見えていない・数えていないなら「中身は未確認」と書く）。ファイルが 1 件でもあれば (a) は推奨にせず、(b) を推奨にする。
 3. (a)〜(c) はフォルダ接続のツールで接続し、接続したフォルダをワークスペースとして 1 の中身を作る。既存の資料が入っているフォルダには混ぜない（(b) を勧める）。接続のツールが無い環境では「Cowork の『フォルダを追加』で空のフォルダを 1 つ選んでください」と案内して待つ。
 4. (d) のときは、以後の完了報告に毎回「保存先なし: 設定と記憶はこのセッション限り」を 1 行入れ、成果物は必ずファイルとしてユーザーに渡す。
-5. WP 認証メモを置くのもこのフォルダの直下（`wp` の段で案内する）。
+5. 接続フォルダではファイルの削除・改名ができないことがある。消せないファイルが出ても退避フォルダ（`_to_delete/` 等）を作らず、パスを 1 行で報告するだけにする。説明用のファイル（README 等）を勝手に追加しない。
+6. WP 認証メモを置くのもこのフォルダの直下（`wp` の段で案内する）。
 
 ## db — SQLite 記憶 DB
 
@@ -48,6 +50,8 @@ argument-hint: [folder / db / profile / sheet / wp / rules / memory / packs / fe
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/seo-db.py init
 ```
 `knowledge/data/seo.db` を `templates/db-schema.sql` で作る（既存なら追加テーブルのみ）。記録は常に INSERT（追記型）。
+
+接続フォルダ（ホスト PC の共有フォルダ）の上では SQLite のファイルロックが効かず、直接開けないことがある。その場合は `seo-db.py` が自動で一時領域の作業コピーを使い、終了時に正本（`knowledge/data/seo.db`）へ上書きで書き戻す（`init` の出力が `"mode": "workcopy"`）。**AI が seo.db を手で複製・書き戻ししない**。DB の操作は必ず `seo-db.py` 経由（`sqlite3` コマンドで直接開かない）。
 
 ## profile — サイトプロファイル（サイト固有の分類・固定見出し・CTA）
 

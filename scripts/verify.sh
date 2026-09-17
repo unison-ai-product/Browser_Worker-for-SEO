@@ -42,6 +42,8 @@ step "sqlite schema + knowledge FTS search" db_smoke
 wp_refuse() { local out rc; out=$($PY scripts/wp-draft.py --site https://example.invalid --title t --content README.md --status publish); rc=$?; [ "$rc" -eq 1 ] && echo "$out" | grep -q '許可されていません'; }
 step "wp-draft refuses status=publish" wp_refuse
 
+check_db_workcopy() { local d; d=$(mktemp -d); ( cd "$d" && SEO_DB_MODE=workcopy $PY "$ROOT/scripts/seo-db.py" init >/dev/null && SEO_DB_MODE=workcopy $PY "$ROOT/scripts/seo-db.py" feedback add --stage t --note n >/dev/null && $PY "$ROOT/scripts/seo-db.py" stats | grep -q '"feedback": 1' ); }
+step "seo-db work-copy mode writes back to knowledge/data/seo.db" check_db_workcopy
 check_setup_status() { local d; d=$(mktemp -d); SEO_WORKSPACE_PERSISTENT=1 $PY scripts/setup-status.py --root "$d" | $PY -c "import json,sys; j=json.load(sys.stdin); assert j['next']=='db' and j['total']==6 and not j['can_start'], j"; }
 step "setup-status reports the next step on an empty workspace" check_setup_status
 

@@ -3,7 +3,7 @@
 -- 方針: 正本は追記型（INSERT のみ。UPDATE で履歴を消さない。最新は MAX(created_at)）。
 --       成果物の正はスプレッドシート、記事の正は WP 下書き。DB は履歴・記憶・検索用。
 
-PRAGMA journal_mode = WAL;
+PRAGMA journal_mode = TRUNCATE;
 
 CREATE TABLE IF NOT EXISTS schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 INSERT OR IGNORE INTO schema_meta VALUES ('version', '1');

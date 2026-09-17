@@ -5,6 +5,9 @@
 
 ## [Unreleased]
 
+### Changed
+- 機械的な作業の Sonnet 3 体（serp-collector / article-analyzer / diagram-maker）のエフォートを medium → low に。本文を書く unit-drafter と Opus の 2 体（敵対検証・統合）は medium のまま
+
 ## [0.2.4] - 2026-09-17
 
 ### Fixed（仕様メモとの突合で見つけたずれ。v0.2.3 の速度改善で入れてしまった分を含む）

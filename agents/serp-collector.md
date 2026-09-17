@@ -11,7 +11,7 @@ assistant: "seo-start でゲートを通したので、serp-collector に検索�
 </commentary>
 </example>
 model: sonnet
-effort: medium
+effort: low
 color: cyan
 tools: ["Read", "Write"]
 ---

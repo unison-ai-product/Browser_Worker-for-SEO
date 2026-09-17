@@ -11,7 +11,7 @@ assistant: "手順の H2 には流れ図が向くので diagram-maker に SVG �
 </commentary>
 </example>
 model: sonnet
-effort: medium
+effort: low
 color: green
 tools: ["Read", "Write"]
 ---

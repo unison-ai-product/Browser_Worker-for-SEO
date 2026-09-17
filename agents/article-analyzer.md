@@ -11,7 +11,7 @@ assistant: "上位5記事それぞれに article-analyzer を起動します（4
 </commentary>
 </example>
 model: sonnet
-effort: medium
+effort: low
 color: blue
 tools: ["Read", "Write", "WebFetch"]
 ---

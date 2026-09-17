@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-17
+
+### Changed（速度: 実機で 1 本 1 時間超 → 目安 50 分。ゲート・監査は省かない）
+- ① SERPs解析: 検索窓への入力と 1 要素ずつのクリックをやめ、検索 URL へ navigate → `templates/js/serp-expand.js`（AIO と PAA 4 問を開く）→ `serp-extract.js`（AIO・オーガニック・PAA・関連・サジェスト・ログイン状態を JSON で返す）→ get_page_text を 1 往復で実行。上位 5 記事のページ構造も `page-extract.js` で 1 往復で取り `pages/<順位>.json` に保存
+- ② 記事分析: ブラウザを使わず `pages/<順位>.json` を材料にする。article-analyzer は 5 体同時（旧: 最大 4 体 + サブエージェントがブラウザを取り合って直列化）
+- ③ 構成案: 内部リンク候補の検索を H2 ごと → 1 回（WordPress の公開検索 API、だめなら site: 検索 1 回）。敵対検証は 1 回だけ
+- ④ 記事作成: unit-drafter を U1→U2→U3 の直列 → 3 体同時（`units/style.md` で文体・用語を先に固定）。fact-checker も 3 体同時。fix-integrator は全文再生成をやめ、連結済み article.md への Edit 差分修正。目視ゲートは機械判定 PASS の周だけ
+- 通し手順に時間の目安（① 5 / ② 10 / ③ 10 / ④ 25 分）と `timing.md` への計測を追加
+
 ## [0.2.2] - 2026-09-17
 
 ### Added
@@ -90,7 +99,8 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.3
 [0.2.2]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.2
 [0.2.1]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.1
 [0.2.0]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.0

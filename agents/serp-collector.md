@@ -25,7 +25,7 @@ color: cyan
 
 ## やること
 1. スキルの「SERP 要素の定義」と「記事順位の採番規則」を読む。
-2. 呼び出し側が既に検索結果ページを開いている前提で、get_page_text と read_page を browser_batch で 1 回に集約して読む。「さらに表示」「他の人はこちらも検索」の展開が必要なら最大 3 回まで追加で読む。
+2. 材料は呼び出し側が取得済みの `memory/work/<kw>/serp_raw.json`（templates/js/serp-extract.js の返り値）と `serp_raw.md`（get_page_text）と `pages/<順位>.json`。**ブラウザは操作しない**（取得はメインループが 1 往復で済ませている）。足りない項目は「未取得」と書いて返す。
 3. 抽出項目を JSON（templates/sheet-layout.md の SERPs 列に対応するキー）と Markdown の両方で `memory/work/<kw>/serps.json` / `serps.md` に書く。
 4. 取れなかった項目は `null` ではなく `"未取得: <理由>"` と書く。
 5. 返答は 10 行以内: AIO 有無 / 引用 URL 数 / 記事順位 1〜5 のドメイン / PAA 数 / personalized / 保存パス。

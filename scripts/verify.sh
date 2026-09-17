@@ -44,6 +44,14 @@ step "wp-draft refuses status=publish" wp_refuse
 
 check_db_workcopy() { local d; d=$(mktemp -d); ( cd "$d" && SEO_DB_MODE=workcopy $PY "$ROOT/scripts/seo-db.py" init >/dev/null && SEO_DB_MODE=workcopy $PY "$ROOT/scripts/seo-db.py" feedback add --stage t --note n >/dev/null && $PY "$ROOT/scripts/seo-db.py" stats | grep -q '"feedback": 1' ); }
 step "seo-db work-copy mode writes back to knowledge/data/seo.db" check_db_workcopy
+check_js_templates() { local d f; d=$(mktemp -d); mkdir -p "$d/memory/.workflow"
+  for f in serp-expand serp-extract page-extract; do [ -s "templates/js/$f.js" ] || { echo "missing $f"; return 1; }; done
+  # page-extract は読み取り専用。フラグ無し（② 単体）でも Workflow Gate を通ること
+  $PY -c "import json,io; print(json.dumps({'tool_name':'mcp__claude-in-chrome__javascript_tool','tool_input':{'action':'javascript_exec','text':io.open('templates/js/page-extract.js',encoding='utf-8').read()}}))" > "$d/p.json"
+  [ -z "$(CLAUDE_PROJECT_DIR="$d" bash hooks/scripts/workflow-gate.sh < "$d/p.json")" ] || { echo "page-extract.js is denied by workflow-gate without flags"; return 1; }
+  command -v node >/dev/null 2>&1 || return 0
+  for f in serp-expand serp-extract page-extract; do node -e "new (Object.getPrototypeOf(async function(){}).constructor)('return ' + require('fs').readFileSync('templates/js/$f.js','utf8'))" || { echo "syntax $f"; return 1; }; done; }
+step "templates/js extraction scripts exist, parse, and pass the read-only gate" check_js_templates
 check_setup_status() { local d; d=$(mktemp -d); SEO_WORKSPACE_PERSISTENT=1 $PY scripts/setup-status.py --root "$d" | $PY -c "import json,sys; j=json.load(sys.stdin); assert j['next']=='db' and j['total']==6 and not j['can_start'], j"; }
 step "setup-status reports the next step on an empty workspace" check_setup_status
 

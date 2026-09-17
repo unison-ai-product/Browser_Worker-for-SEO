@@ -11,19 +11,22 @@ argument-hint: <検索キーワード>
 ## 手順
 
 1. 単体実行なら `procedures/seo-start.md` をタスク名 `serps_<kw>` で通す（通しなら stage を `serps` に）。
-2. **検索環境を整える**（仕様の「シークレットモード」相当）:
-   - Claude in Chrome で新規タブを開き `https://www.google.com/?hl=ja&gl=jp` へ。
-   - find でアカウントアイコン／ログイン状態を確認。ログイン中なら結果に `personalized: true` を付けて続行し（自社サイトの所有者でログインしていると SERP 内に「このクエリの検索パフォーマンス（Search Console Insights）」が挿入される。これも personalized の証拠として記録）、完了報告で「パーソナライズの影響あり。厳密比較はシークレットで再取得を」と1行添える（ログアウト操作はしない）。
-   - 位置情報・言語は日本／日本語。`knowledge/sites/google-search.md` にランドマーク（検索窓 ref・AIO ブロックの見出し・広告ラベル・関連質問ブロック）があれば照合する。
-3. 検索窓にキーワードを入力（form_input）し、**Enter ではなく「Google 検索」ボタンをクリック**する（Enter はサジェスト候補の選択になり検索が走らない — 2026-09-16 実測）。入力直後の候補リストが「サジェストキーワード」なので、ボタンを押す前に get_page_text で取っておく。ここが最初の変更操作（e_done まで済んでいること）。
-4. **結果を1コールで読み取る**: `get_page_text` + `read_page`（filter all）を browser_batch で取得し、`memory/work/<kw>/serp_raw.md` に保存する。スクロールして「他の人はこちらも検索」「関連する質問」「関連する商品」「さらに表示」の展開が必要ならクリックしてもう1回読む（最大3回）。
-5. **抽出**（skills/seo-analysis の定義に従う）:
-   - AIO（AI による概要）: **get_page_text には載らない**。find で「AI による概要」の region を取り、scroll_to → 「もっと見る」をクリック → その region を read_page して本文・見出し・引用リンク（href とアンカー）を取る（2026-09-16 実測）。AIO は上部広告の下・オーガニック 1 位の上に出る。出ない場合は `aio: none` と記録し、再検索はしない。
-   - 広告: 「スポンサー」ラベルのブロックを数え、記事順位の計算から除外する。
-   - 記事サイトの出現順位: AIO・広告・動画カルーセル・ショッピング・地図・ニュース・SNS（X / YouTube / Instagram）・EC（Amazon / 楽天）を除いた**記事型ページ**の順に 1 から採番。除外した要素は `serp_features` として種類と位置を記録する。
-   - 上位5記事: 順位・タイトル・URL（read_page の href をそのまま `serps.json` に保存。② がこれで記事を開く）・メタディスクリプション（SERP 表示のスニペットと、可能なら WebFetch で取得した `<meta name="description">` の両方）。
-   - 関連する質問（PAA）: 質問文と、展開して得た回答の要約と出典 URL（展開クリックは変更操作扱い。最大 8 問）。
-   - 関連する商品やサービス / 他の人はこちらも検索: 語句のリスト。
+2. **検索して 1 往復で読み取る**（目安 5 分。検索窓に打ち込まない・1 要素ずつクリックしない）。Claude in Chrome で新規タブを開き、まず 1 の navigate だけを実行して `before.md` に「検索結果 URL・ページタイトル」の 2 行を書き `touch memory/.workflow/e_done`（① の変更前記録はこれで足りる。read_page で全体を読まない）。続けて 2〜4 を **browser_batch の 1 回**で実行する（batch が使えなければ同じ順に 3 コール）:
+   1. navigate `https://www.google.com/search?q=<URL エンコードしたキーワード>&hl=ja&gl=jp`
+   2. javascript_tool ← `${CLAUDE_PLUGIN_ROOT}/templates/js/serp-expand.js` の中身（AIO の「もっと見る」と PAA 先頭 4 問を開く。クリックを伴うので e_done まで済んでいること）
+   3. javascript_tool ← `${CLAUDE_PLUGIN_ROOT}/templates/js/serp-extract.js` の中身（AIO 本文と引用リンク / オーガニック（タイトル・href・cite・スニペット・スポンサー判定）/ PAA の質問 / 他の人はこちらも検索 / サジェスト / ログイン状態を JSON で返す。サジェストは Google の候補 API を同一オリジンで引くので、検索窓への入力は不要）
+   4. get_page_text（PAA を開いた後の回答文と出典、関連する商品やサービスのブロックはここから読む）
+   - 返った JSON を `memory/work/<kw>/serp_raw.json`、テキストを `serp_raw.md` に保存する。
+   - `captcha: true` なら中断して報告（突破しない）。`organic` が 0 件（Google の DOM 変更でセレクタが外れた）のときだけ、従来の read_page（`main "ウェブ検索結果"` を ref_id 指定）に切り替え、`knowledge/sites/google-search.md` に 1 行記録する。
+   - `personalized: true`（ログイン中）や `insights_widget: true`（Search Console Insights / Google 広告ウィジェットの挿入）はそのまま記録し、完了報告で「パーソナライズの影響あり。厳密比較はシークレットで再取得を」と 1 行添える（ログアウト操作はしない）。
+3. **抽出**（skills/seo-analysis の定義に従う。材料は手順2 の JSON とテキストだけ。追加のブラウザ操作はしない）:
+   - AIO: `aio.text` と `aio.links`。`aio: null` なら `aio: none` と記録し、再検索はしない。
+   - 広告: `sponsored: true` の件数を数え、記事順位の計算から除外する。
+   - 記事サイトの出現順位: AIO・広告・動画カルーセル・ショッピング・地図・ニュース・SNS（X / YouTube / Instagram）・EC（Amazon / 楽天）・Yahoo!知恵袋を除いた**記事型ページ**の順に 1 から採番。除外した要素は `serp_features` として種類と位置を記録する。
+   - 関連する質問（PAA）: 質問文（JSON）と、開いた 4 問の回答要約・出典 URL（テキスト）。5 問目以降は質問文だけでよい。
+   - 関連する商品やサービス / 他の人はこちらも検索 / サジェスト: 語句のリスト。
+4. **上位 5 記事のページ構造を 1 往復で取る**（② がこのファイルをそのまま使う。② でブラウザを開き直さない）: 上位 5 記事と知恵袋（あれば 1 件）について、**browser_batch の 1 回**で `navigate <href>` → javascript_tool ← `${CLAUDE_PLUGIN_ROOT}/templates/js/page-extract.js` の中身、を記事の数だけ並べる。返った JSON を `memory/work/<kw>/pages/<順位>.json`（知恵袋は `pages/chiebukuro.json`）に保存する。これでメタディスクリプション（実 `<meta>`）・見出し階層・H2 配下の内部リンク・JSON-LD・公開日/更新日・著者・文字数が揃う（読み取り専用なのでゲートは不要）。取れなかった記事（403・JS 描画で本文が空）だけ WebFetch で補う。
+5. `serps.json` を組み立てる（上位 5 記事: 順位・タイトル・URL・SERP スニペット・`meta_description`）。
 6. **記録**:
    - `memory/work/<kw>/serps.md` に整形（templates/sheet-layout.md の `SERPs` シート列順で）。
    - スプレッドシート `SERPs` シートに 1 行追記（Drive の MCP ツール。`config.yaml` の `sheet_id`。列順はレイアウト正本に従う）。

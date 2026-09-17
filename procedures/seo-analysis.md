@@ -5,18 +5,19 @@ argument-hint: <検索キーワード>
 
 # ② 記事分析
 
-**担当**: article-analyzer（Sonnet）を**記事1本につき1体**、最大4体同時に起動（5本目は返ってから）。各体に「URL・SERP 順位・AIO 本文・キーワードマップの該当行・この手順書と skills/seo-analysis の絶対パス」を渡す。統合（共通キーワード・差別化要素・推移マップ）はメインループが行う。
+**担当**: article-analyzer（Sonnet）を**記事1本につき1体、5 体を同時に**起動する（1 メッセージに 5 つの Agent 呼び出しを並べる。順番に起動しない）。各体に「`memory/work/<kw>/pages/<順位>.json` の絶対パス・URL・SERP 順位・AIO 本文・キーワードマップの該当行・この手順書と skills/seo-analysis の絶対パス」を渡す。統合（共通キーワード・差別化要素・推移マップ）はメインループが行う。目安 10 分。
+**ブラウザは使わない**: ページ構造（見出し・meta・内部リンク・JSON-LD）は ① の手順4 が `pages/<順位>.json` に取得済み。無い記事があるときだけ、メインループが先に page-extract.js で補ってから article-analyzer を起動する（サブエージェントにブラウザを触らせない。1 つのブラウザを取り合って直列になる）。
 **入力**: `memory/work/<kw>/serps.md`（無ければ seo.db `serp_runs` から復元。どちらも無ければ ① を先に回す）。
 **キーワードマップ**: `config.yaml` の `keyword_map_sheet`（シート名 `キーワードマップ`。列: 親KW / 子KW / 検索意図 / 優先度 / 備考）を Drive ツールで読み、`memory/work/<kw>/keyword_map.csv` に写す。無ければユーザーに「キーワードマップ未登録。/SEO設定 sheet で登録するか、今回は上位記事の共起語だけで進めるか」を1問で聞く。
 
 ## 手順（記事ごと — article-analyzer が実行）
 
-1. WebFetch で記事を取得（403/JS 描画で本文が取れなければ Claude in Chrome で開いて get_page_text。閲覧のみ）。URL は ① の `serps.json` に保存した href を使う（SERP のタイトルから再検索して探さない。見つからないときは Bing の `site:` 検索かサイト内の記事一覧で特定。DuckDuckGo の html 版は CAPTCHA が出る — 2026-09-16 実測）。
-2. タイトル / H1 / H2〜H4 の階層 / meta description / 公開日・更新日 / 著者表記 / 文字数（概算）を抽出。
-3. **見出し配下の内部リンク**: 各 H2 セクション内のリンクのうち同一ドメインのものを「見出し → リンク先タイトル・URL」の形で列挙（遷移マップ）。外部リンクは件数のみ。
+1. `pages/<順位>.json` を Read（見出し階層・meta・H2 配下の内部リンク・JSON-LD・日付・著者・文字数が入っている）。本文の主張を読むために WebFetch で記事を 1 回取得する（403/JS 描画で取れなければ、その旨を返してメインループに任せる）。URL は ① の `serps.json` に保存した href を使う（SERP のタイトルから再検索して探さない。見つからないときは Bing の `site:` 検索かサイト内の記事一覧で特定。DuckDuckGo の html 版は CAPTCHA が出る — 2026-09-16 実測）。
+2. タイトル / H1 / H2〜H4 の階層 / meta description / 公開日・更新日 / 著者表記 / 文字数は JSON の値を写す（読み直して数えない）。
+3. **見出し配下の内部リンク**: JSON の `sections`（H2 → 同一ドメインのリンク・外部リンク件数）を「見出し → リンク先タイトル・URL」の形で写す（遷移マップ）。ナビゲーション・CTA ボタン（「無料エントリー」等）は除く。
 4. **主義・主張の分類**: 記事の中心主張を 3 つまで抜き出し、キーワードに対する世論（AIO と上位記事の多数派）を基準に `reinforce`（世論強化）/ `oppose`（世論反対）/ `neutral`（中立）で分類。切り抜きは**原文 60 字以内の引用 + 出典 URL**。
 5. **AIO 引用箇所の特定**: AIO の引用 URL がこの記事なら、AIO 本文の各文と記事本文を突き合わせ、引用元と思われる段落（見出し名・冒頭 40 字）を特定。AIO がどう言い換えたか（原文 → AIO 文）を並記。
-6. **構造化データと LLM 閲覧テキスト**（WebFetch は要約済みテキストしか返さず `<meta>` と JSON-LD は取れない。Claude in Chrome の read_page か javascript_tool で `document.head` を読む — 2026-09-16 実測）: `<script type="application/ld+json">` の @type（Article / FAQPage / BreadcrumbList / HowTo 等）と主要フィールド、`<title>`・OGP、そして本文をプレーンテキスト化した先頭 300 字（LLM が読む形）を記録。
+6. **構造化データと LLM 閲覧テキスト**（JSON の `jsonld_types` / `jsonld` / `og_*` / `llm_text_head` を写す。WebFetch は要約済みテキストしか返さず `<meta>` と JSON-LD は取れないので、ここは JSON が正）: `<script type="application/ld+json">` の @type（Article / FAQPage / BreadcrumbList / HowTo 等）と主要フィールド、`<title>`・OGP、そして本文をプレーンテキスト化した先頭 300 字（LLM が読む形）を記録。
 7. 結果を `memory/work/<kw>/analysis_<順位>.md` に書いて返す。
 
 ## 手順（統合 — メインループ）

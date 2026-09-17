@@ -23,6 +23,7 @@ color: magenta
 - memory/work/<kw>/outline.md（承認済み構成案。見出しはこれが正）
 - knowledge/rules/media-rules.md、gate_rules.yaml、skills/seo-writing/SKILL.md
 - 修正ループ時: keyword-gate の判定表と keyword-gate.py の JSON
+- 入力の article.md は 3 ユニットを連結済み。**全文を書き直さず、Edit で差分修正する**（文体・用語の統一、装飾、図解の挿入、内部リンク、つなぎの一文）。全文の再出力は 1 本で数分かかるので行わない。ゲート FAIL の差し戻しも FAIL 項目だけを Edit で直す
 - 出力先 memory/work/<kw>/article.md（本文）と article.html（WP 用。media-rules の HTML 記法）、meta.md（title / description 120 字 / slug / category / excerpt）
 
 ## やること

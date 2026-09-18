@@ -19,6 +19,7 @@ SEO Worker のタスク「$ARGUMENTS」を開始する。手順の正本は `doc
 1. 作業場とフラグを初期化する:
    ```bash
    mkdir -p memory/.workflow memory/work knowledge/logs knowledge/data knowledge/feedback knowledge/rules knowledge/config
+   touch knowledge/config/.seo-worker   # このフォルダを SEO ワークスペースとして hooks を有効にする印
    rm -f memory/.workflow/{b4_done,e_done,k_done,gate_pass,ov_done,psv_done}
    echo "$ARGUMENTS" > memory/.workflow/active
    ```

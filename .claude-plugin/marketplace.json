@@ -7,7 +7,7 @@
     {
       "name": "seo-content-worker",
       "source": "./",
-      "version": "0.2.6",
+      "version": "0.2.7",
       "description": "SEO記事のコンテンツ制作 — SERPs解析→記事分析→構成案→記事作成→WP下書き"
     }
   ]

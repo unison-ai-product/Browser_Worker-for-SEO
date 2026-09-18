@@ -5,6 +5,22 @@
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 WF_DIR="${DELVEWORK_WF_DIR:-$PROJECT_DIR/memory/.workflow}"
 
+# --- 適用範囲: SEO Worker のワークスペースだけで動く ---
+# アカウント単位で入れたプラグインはデスクトップアプリの全 Claude Code セッションに同期され、
+# hooks も全プロジェクトで発火する（無関係なリポジトリで Subagent Guard が Explore を止める・
+# 運用ルールが毎セッション注入される等）。SEO 専用の痕跡が無いワークスペースでは何もせず exit 0。
+# memory/.workflow・knowledge/config は browser-worker と共通なので判定に使わない。
+# マーカー: knowledge/config/.seo-worker（seo-start / seo-setup が作る）、seo.db（セットアップ済み）、
+# memory/.workflow/stage（SEO タスク実行中）。SEO_WORKER_SCOPE=always で常時有効、off で常時無効。
+seo_workspace() {
+  case "${SEO_WORKER_SCOPE:-auto}" in
+    always|on) return 0 ;;
+    off) return 1 ;;
+  esac
+  [ -f "$PROJECT_DIR/knowledge/config/.seo-worker" ] || [ -f "$PROJECT_DIR/knowledge/data/seo.db" ] || [ -f "$WF_DIR/stage" ]
+}
+seo_workspace || exit 0
+
 # Capture stdin (hook payload JSON) for input inspection
 STDIN_JSON="$(cat 2>/dev/null || true)"
 

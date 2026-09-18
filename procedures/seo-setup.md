@@ -35,6 +35,7 @@ argument-hint: [folder / db / profile / sheet / wp / rules / memory / packs / fe
 1. `setup-status.py` の `folder` が `done` なら何も聞かず、中身だけ作る:
    ```bash
    mkdir -p memory/.workflow memory/work knowledge/config knowledge/data knowledge/rules knowledge/memory knowledge/feedback knowledge/logs knowledge/links outputs
+   touch knowledge/config/.seo-worker   # このフォルダを SEO ワークスペースとして hooks を有効にする印
    [ -f knowledge/config/config.yaml ] || cp ${CLAUDE_PLUGIN_ROOT}/templates/config.yaml knowledge/config/config.yaml
    ```
 2. `todo` なら AskUserQuestion で保存先を 1 問で聞く。選択肢は実際に見えているフォルダから作る: (a) 既にある空のフォルダをそのまま使う（推奨）/ (b) その中に専用サブフォルダを新規作成 / (c) ドキュメント直下に新規フォルダ / (d) 保存しない（お試し。設定と記憶はセッション終了で消える）。

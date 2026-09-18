@@ -6,6 +6,7 @@ SC="$ROOT/hooks/scripts"
 export CLAUDE_PROJECT_DIR="$(mktemp -d)"
 export DELVEWORK_WF_DIR="$CLAUDE_PROJECT_DIR/memory/.workflow"
 mkdir -p "$DELVEWORK_WF_DIR"
+mkdir -p "$CLAUDE_PROJECT_DIR/knowledge/config"; touch "$CLAUDE_PROJECT_DIR/knowledge/config/.seo-worker"   # SEO ワークスペースの印（無いと hooks は何もしない）
 FAIL=0
 
 check() { # name, expected grep -E pattern or EMPTY, got
@@ -184,6 +185,29 @@ rm -f "$CLAUDE_PROJECT_DIR/memory/.update_check"; mkdir -p "$CLAUDE_PROJECT_DIR/
 got=$(printf '%s' '{}' | bash "$SC/session-start.sh" | grep -c '更新あり')
 check "Update Check: packs.conf の update_check=off で止まる" '^0$' "$got"
 rm -f "$CLAUDE_PROJECT_DIR/knowledge/config/packs.conf"; unset SEO_UPDATE_URL
+
+# 16. 適用範囲: SEO の印が無いワークスペース（他プロジェクト）では全 hook が無出力
+OTHER="$(mktemp -d)"; mkdir -p "$OTHER/memory/.workflow" "$OTHER/knowledge/config"   # browser-worker と共通のフォルダだけある
+scope() { CLAUDE_PROJECT_DIR="$OTHER" DELVEWORK_WF_DIR="$OTHER/memory/.workflow" bash "$SC/$1"; }
+got=$(printf '%s' '{}' | scope session-start.sh)
+check "Scope: 他プロジェクトでは運用ルールを注入しない" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"Agent","tool_input":{"subagent_type":"Explore","prompt":"x"}}' | scope subagent-guard.sh)
+check "Scope: 他プロジェクトでは Subagent Guard が止めない" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"rm -rf build"}}' | scope rm-guard.sh)
+check "Scope: 他プロジェクトでは RM Guard が止めない" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"mcp__claude-in-chrome__computer","tool_input":{"action":"left_click","coordinate":[1,1]}}' | scope workflow-gate.sh)
+check "Scope: 他プロジェクトでは Workflow Gate が止めない" 'EMPTY' "$got"
+echo t > "$OTHER/memory/.workflow/active"
+got=$(printf '%s' '{}' | scope drop-guard.sh)
+check "Scope: 他プロジェクトの active では Drop Guard が出ない" 'EMPTY' "$got"
+got=$(printf '%s' '{"tool_name":"Agent","tool_input":{"subagent_type":"Explore","prompt":"x"}}' | SEO_WORKER_SCOPE=always scope subagent-guard.sh)
+check "Scope: SEO_WORKER_SCOPE=always で強制有効" 'Subagent Guard' "$got"
+echo serps > "$OTHER/memory/.workflow/stage"
+got=$(printf '%s' '{"tool_name":"Agent","tool_input":{"subagent_type":"Explore","prompt":"x"}}' | scope subagent-guard.sh)
+check "Scope: 実行中の SEO タスク（stage あり）は有効" 'Subagent Guard' "$got"
+got=$(printf '%s' '{"tool_name":"Agent","tool_input":{"subagent_type":"Explore","prompt":"x"}}' | SEO_WORKER_SCOPE=off scope subagent-guard.sh)
+check "Scope: SEO_WORKER_SCOPE=off で強制無効" 'EMPTY' "$got"
+rm -rf "$OTHER"
 
 rm -rf "$CLAUDE_PROJECT_DIR"
 [ "$FAIL" = 0 ] && echo "ALL PASS" || echo "SOME FAIL"

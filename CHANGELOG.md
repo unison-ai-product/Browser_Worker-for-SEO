@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-09-18
+
+### Fixed
+- アカウント単位で入れたプラグインはデスクトップアプリの全 Claude Code セッションに同期され、hooks が無関係なプロジェクトでも発火していた（運用ルールの注入、Subagent Guard が Explore 等を deny、RM Guard・Secret Guard・Injection Warn など）→ hooks は SEO ワークスペースでだけ動く。印は `knowledge/config/.seo-worker`（/SEO設定・seo-start が作る）、`knowledge/data/seo.db`、`memory/.workflow/stage` のいずれか。`memory/.workflow` と `knowledge/config` は browser-worker と共通なので印にしない。`SEO_WORKER_SCOPE=always` で常時有効、`off` で常時無効
+
 ## [0.2.6] - 2026-09-17
 
 ### Fixed（実機の通し 1 本・3 時間のログから）
@@ -132,7 +137,8 @@
 - 公開（publish / future / private）は AI 不可。下書きもゲート PASS の証跡が無ければ不可
 - 成果物はスプレッドシート、記事は WP 下書きのみ、記憶は SQLite
 
-[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.7
 [0.2.6]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.6
 [0.2.5]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.5
 [0.2.4]: https://github.com/UNISON-TECHNOLOGY/seo-content-worker/releases/tag/v0.2.4
